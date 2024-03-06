@@ -3,7 +3,7 @@
 </script>
 
 <template>
-  abc
+  poi
   <router-view></router-view>
 </template>
 
