@@ -3,6 +3,7 @@
 </script>
 
 <template>
+  abc
   <router-view></router-view>
 </template>
 
