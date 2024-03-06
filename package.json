@@ -7,7 +7,9 @@
     "dev": "vite",
     "preview": "vite preview",
     "build": "vite build",
-    "typecheck": "vue-tsc"
+    "typecheck": "vue-tsc",
+    "predeploy":"npm run build",
+    "deploy":"gh-pages -d dist -r https://github.com/LeoZerona/xz_1.git -b gh-pages"
   },
   "dependencies": {
     "@ant-design/icons-vue": "^7.0.1",
@@ -29,6 +31,7 @@
     "@vitejs/plugin-vue": "^5.0.3",
     "@vue/cli-service": "^5.0.8",
     "@vue/compiler-sfc": "^3.4.21",
+    "gh-pages": "^6.1.1",
     "less": "^4.2.0",
     "sass": "^1.71.0",
     "typescript": "^5.3.3",
