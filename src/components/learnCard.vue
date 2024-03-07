@@ -1,21 +1,47 @@
 <template>
-  <el-card class="box-card">
+  <!-- 答题区 -->
+  <el-card class="answer-card">
     <div class="learn-card">
       <div class="title">选择以下正确的选项</div>
-      <el-progress class="progress-bar" :percentage="percentage" :text-inside="true" :stroke-width="20"
-        :color="customColors" :format="format" />
+      <el-progress
+        class="progress-bar"
+        :percentage="percentage"
+        :text-inside="true"
+        :stroke-width="20"
+        :color="customColors"
+        :format="format"
+      />
       <div class="characters">{{ topic.answer }}</div>
+      <div class="search" @click="searchCharacter">
+        <el-icon><Search /></el-icon>
+      </div>
       <!-- 选择题 -->
       <!-- style="display: none;" -->
       <div class="options" v-show="topic.type === 'select'">
-        <el-button v-for="(item, index) in topic.options" :key="index" class="option" @click="judge(item)">{{ item
-          }}</el-button>
+        <el-button
+          v-for="(item, index) in topic.options"
+          :key="index"
+          class="option"
+          @click="judge(item)"
+          >{{ item }}</el-button
+        >
       </div>
       <!-- 填空题 -->
       <!-- style="display: none;" -->
       <div class="fill_blank">
-        <el-input class="input_box" v-model="blankAnswer" placeholder="请输入对应答案" clearable />
-        <el-button type="primary" class="btn" style="color: aliceblue;" @click="judge(blankAnswer)">确定</el-button>
+        <el-input
+          class="input_box"
+          v-model="blankAnswer"
+          placeholder="请输入对应答案"
+          clearable
+        />
+        <el-button
+          type="primary"
+          class="btn"
+          style="color: aliceblue"
+          @click="judge(blankAnswer)"
+          >确定</el-button
+        >
       </div>
     </div>
     <!-- 答题提示 -->
@@ -32,10 +58,17 @@
           <span class="answer-xiaozhuan">{{ topic.answer }}</span>
           <span class="answer-jianti">（{{ topic.answer }}）</span>
         </div>
-        <el-button :type="correct ? 'success' : 'danger'" class="btn" @click="next">知道了</el-button>
+        <el-button
+          :type="correct ? 'success' : 'danger'"
+          class="btn"
+          @click="next"
+          >知道了</el-button
+        >
       </div>
     </el-card>
   </el-card>
+  <!-- 搜词区 -->
+  <el-card class="search-card"></el-card>
   <name-slot-dialog :dialogFlog="endDialog" title="完成">
     <template #content>
       <div>恭喜你完成本次学习！</div>
@@ -48,90 +81,101 @@
 </template>
 
 <script lang="ts" setup name="unitCard">
-import { unitData } from '@/store/unit.ts'
-import { storeToRefs } from 'pinia'
-const unit = unitData()
-const { endDialog } = storeToRefs(unit)
+import { unitData } from "@/store/unit.ts";
+import { storeToRefs } from "pinia";
+import func from "../../vue-temp/vue-editor-bridge";
+const unit = unitData();
+const { endDialog } = storeToRefs(unit);
 interface TopicType {
-  index: number,
-  count: number,
-  type: string,
-  answer: string,
-  options: Array<string>
+  index: number;
+  count: number;
+  type: string;
+  answer: string;
+  options: Array<string>;
 }
-const router = useRouter()
+const router = useRouter();
 const { topic } = defineProps({
   topic: {
     type: Object as PropType<TopicType>,
     required: true,
     // 如果需要默认值可以在这里添加 default: () => ({ /* 默认对象 */ })
-  }
-})
-const emit = defineEmits(['next']);
-const format = (percentage: number) => (percentage === 100 ? 'Full' : `${topic.index + 1}/${topic.count}`)
+  },
+});
+const emit = defineEmits(["next"]);
+const format = (percentage: number) =>
+  percentage === 100 ? "Full" : `${topic.index}/${topic.count}`;
 const customColors = [
-  { color: '#f56c6c', percentage: 20 },
-  { color: '#e6a23c', percentage: 40 },
-  { color: '#5cb87a', percentage: 60 },
-  { color: '#1989fa', percentage: 80 },
-  { color: '#6f7ad3', percentage: 100 },
-]
-const correct: Ref<boolean | null> = ref(null)
-const blankAnswer: Ref<string> = ref('')
+  { color: "#9DD3A8", percentage: 20 },
+  { color: "#F7D794", percentage: 40 },
+  { color: "#FFAB91", percentage: 60 },
+  { color: "#6A82FB", percentage: 80 },
+  { color: "#78E08F", percentage: 100 },
+];
+const correct: Ref<boolean | null> = ref(null);
+const blankAnswer: Ref<string> = ref("");
 const tipStyle = reactive({
-  icon: 'CircleCheckFilled',
+  icon: "CircleCheckFilled",
   style: {
-    color: '#92d436'
+    color: "#92d436",
   },
   head: {
-    text: '太棒了！'
-  }
-})
-const percentage: Ref<number> = ref(0)
-onMounted(() => {
-})
+    text: "太棒了！",
+  },
+});
+const percentage: Ref<number> = ref(0);
+onMounted(() => {});
 // 监听correct
 watchEffect(() => {
-  console.log('correct changed:', correct.value);
+  console.log("correct changed:", correct.value);
   if (correct.value) {
-    tipStyle.icon = 'CircleCheckFilled'
+    tipStyle.icon = "CircleCheckFilled";
     tipStyle.style = {
-      color: '#92d436'
-    }
-    tipStyle.head.text = '太棒了！'
+      color: "#92d436",
+    };
+    tipStyle.head.text = "太棒了！";
   } else {
-    tipStyle.icon = 'CircleCloseFilled'
+    tipStyle.icon = "CircleCloseFilled";
     tipStyle.style = {
-      color: '#d74746'
-    } 
-    tipStyle.head.text = '可惜'
+      color: "#d74746",
+    };
+    tipStyle.head.text = "可惜";
   }
-})
+});
 function initData() {
-  correct.value = null
-  blankAnswer.value = ''
+  correct.value = null;
+  blankAnswer.value = "";
 }
 function judge(select: string) {
-  topic.answer === select ? correct.value = true : correct.value = false;
+  topic.answer === select ? (correct.value = true) : (correct.value = false);
 }
 function next() {
-  initData()
-  topic.index === topic.count - 1 ? endDialog.value = true : emit('next')
+  console.log("啥玩意啊草？", topic);
+
+  initData();
+  percentage.value = Math.floor((topic.index / topic.count) * 100);
+  console.log("啥玩意？", percentage.value);
+
+  // 赋值进度条
+  topic.index === topic.count - 1 ? (endDialog.value = true) : emit("next");
 }
 function backHome() {
-  endDialog.value = false
+  endDialog.value = false;
   // 使用replace进行路由跳转
-  router.replace({ path: '/home' }).catch((err: any) => {
+  router.replace({ path: "/home" }).catch((err: any) => {
     // 处理错误（如果有的话），但通常情况下，重复导航到相同路由会报错。
-    if (err.name !== 'NavigationDuplicated') {
-      console.error('路由跳转路径相同！', err);
+    if (err.name !== "NavigationDuplicated") {
+      console.error("路由跳转路径相同！", err);
     }
   });
+}
+function searchCharacter(){
+  console.log('文字检索');
+  
 }
 </script>
 
 <style lang="scss" scoped>
-.box-card {
+.answer-card {
   position: absolute;
   left: 50%;
   top: 50%;
@@ -153,7 +197,26 @@ function backHome() {
       margin-top: 30px;
       font-size: 50px;
       text-align: center;
-      font-family: '方正小篆体';
+      font-family: "方正小篆体";
+    }
+
+    .search {
+      position: absolute;
+      top: 16%;
+      right: 0;
+      width: 30px;
+      height: 15px;
+      padding: 5px;
+      cursor: pointer;
+      border: 1px solid #c1c1c1;
+      color: #c1c1c1;
+      border-radius: 14px 0px 0px 14px;
+      border-right: 0px;
+    }
+    .search:hover {
+      color: #40a9ff;
+      border: 1px solid #40a9ff;
+      border-right: 0px;
     }
 
     .options {
@@ -169,7 +232,7 @@ function backHome() {
       }
     }
 
-    .options>*:first-child {
+    .options > *:first-child {
       margin-left: 12px;
     }
 
@@ -219,7 +282,7 @@ function backHome() {
         font-size: 20px;
 
         .answer-xiaozhuan {
-          font-family: '方正小篆体';
+          font-family: "方正小篆体";
         }
       }
     }
@@ -237,7 +300,7 @@ function backHome() {
   }
 
   .btn:focus {
-    color: rgba($color: #191b26, $alpha: .5);
+    color: rgba($color: #191b26, $alpha: 0.5);
   }
 }
 </style>

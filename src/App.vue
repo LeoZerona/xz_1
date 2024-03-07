@@ -3,7 +3,6 @@
 </script>
 
 <template>
-  poi
   <router-view></router-view>
 </template>
 
