@@ -27,11 +27,11 @@ declare module 'vue' {
     HelloWorld: typeof import('./components/HelloWorld.vue')['default']
     LearnCard: typeof import('./components/learnCard.vue')['default']
     NameSlotDialog: typeof import('./components/nameSlotDialog.vue')['default']
-    Navigation: typeof import('./components/home/navigation.vue')['default']
-    Part: typeof import('./components/home/part.vue')['default']
+    Navigation: typeof import('./components/topicBank/navigation.vue')['default']
+    Part: typeof import('./components/topicBank/part.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SelectCard: typeof import('./components/learn/selectCard.vue')['default']
-    Unit: typeof import('./components/home/unit.vue')['default']
+    Unit: typeof import('./components/topicBank/unit.vue')['default']
   }
 }

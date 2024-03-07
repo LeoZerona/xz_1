@@ -113,7 +113,7 @@ function nextTopic(){
  * 返回上一级
  */
 function goBack(){
-  router.push('/home')
+  router.push('/topic_bank')
 }
 </script>
 
