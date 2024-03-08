@@ -50,53 +50,104 @@ function aaa() {
   position: absolute;
   top: 50px;
   left: 10px;
-  width: 200px;
-  height: 200px;
-  border: 2px solid red;
-  padding: 50px;
-  .triangle {
-    position: relative;
-    width: 100px;
-    height: 100px;
-    .top {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      width: 80px;
-      height: 20px;
-      background-color: black;
-      border-top-left-radius: 10px;
-      border-bottom-left-radius: 10px;
-      border-top-right-radius: 10px;
-      border-bottom-right-radius: 10px;
-      transform: rotate(-45deg); /* 旋转45度 */
-    }
-    .bottom {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      width: 80px;
-      height: 20px;
-      background-color: red;
-      border-top-left-radius: 10px;
-      border-bottom-left-radius: 10px;
-      border-top-right-radius: 10px;
-      border-bottom-right-radius: 10px;
-      transform: rotate(45deg); /* 旋转45度 */
-    }
-    .right {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      width: 80px;
-      height: 20px;
-      background-color: blue;
-      border-top-left-radius: 10px;
-      border-bottom-left-radius: 10px;
-      border-top-right-radius: 10px;
-      border-bottom-right-radius: 10px;
-      transform: rotate(-45deg); /* 旋转45度 */
-    }
+  width: 90px;
+  height: 90px;
+  border: 5px dashed red; /* 将实线改为虚线 */
+  border-radius: 50%; /* 使用50%确保是圆形 */
+  transition: transform 0.2s; /* 平滑过渡效果 */
+  // .triangle {
+  //   position: relative;
+  //   width: 100px;
+  //   height: 100px;
+  //   .top {
+  //     position: absolute;
+  //     top: 10px;
+  //     left: 10px;
+  //     width: 80px;
+  //     height: 20px;
+  //     background-color: black;
+  //     border-top-left-radius: 10px;
+  //     border-bottom-left-radius: 10px;
+  //     border-top-right-radius: 10px;
+  //     border-bottom-right-radius: 10px;
+  //     transform: rotate(-45deg); /* 旋转45度 */
+  //   }
+  //   .bottom {
+  //     position: absolute;
+  //     top: 10px;
+  //     left: 10px;
+  //     width: 80px;
+  //     height: 20px;
+  //     background-color: red;
+  //     border-top-left-radius: 10px;
+  //     border-bottom-left-radius: 10px;
+  //     border-top-right-radius: 10px;
+  //     border-bottom-right-radius: 10px;
+  //     transform: rotate(45deg); /* 旋转45度 */
+  //   }
+  //   .right {
+  //     position: absolute;
+  //     top: 10px;
+  //     left: 10px;
+  //     width: 80px;
+  //     height: 20px;
+  //     background-color: blue;
+  //     border-top-left-radius: 10px;
+  //     border-bottom-left-radius: 10px;
+  //     border-top-right-radius: 10px;
+  //     border-bottom-right-radius: 10px;
+  //     transform: rotate(-45deg); /* 旋转45度 */
+  //   }
+  // }
+}
+.playBtn:hover {
+  animation: rotate 10s linear infinite, float 2s infinite alternate; /* 鼠标悬停时添加旋转和浮动动画 */
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
   }
 }
+
+@keyframes float {
+  0% {
+    top: 50px;
+  }
+  50% {
+    top: 45px;
+  }
+  100% {
+    top: 50px;
+  }
+}
+
+// .playBtn {
+//   position: absolute;
+//   top: 50px;
+//   left: 10px;
+//   width: 80px;
+//   height: 80px;
+//   border: 3px dashed red; /* 修改边框为虚线 */
+//   border-radius: 43px;
+//   transition: transform 0.2s; /* 平滑过渡效果 */
+// }
+
+// /* 定义一个简单的旋转动画 */
+// @keyframes rotate {
+//   from {
+//     transform: rotate(0deg);
+//   }
+//   to {
+//     transform: rotate(360deg);
+//   }
+// }
+
+// /* 当鼠标悬停在按钮上时，应用旋转动画 */
+// .playBtn:hover {
+//   animation: rotate 5s linear infinite; /* 匀速、无限循环的旋转动画，每次旋转2秒 */
+// }
 </style>
