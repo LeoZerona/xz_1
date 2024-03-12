@@ -36,7 +36,6 @@ const { dialogFlog } = defineProps({
     })
   }
 })
-const aaa:Ref<boolean> = ref(false)
 // 监听方法
 watchEffect(() => {
   console.log('unitInfo changed:', dialogFlog);

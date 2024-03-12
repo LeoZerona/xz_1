@@ -19,6 +19,14 @@
             <div class="learn-content">
               本次学习内容：{{ unitInfo.characters.join("、") }}
             </div>
+            <!-- <div class="learn-content">
+              本次学习内容：
+              <div v-for="(item, index) in unitInfo.characters" :key="index">
+                <span class="jt">{{ item }}</span> ->
+                <span class="ft" style="font-family: '汉仪楷体繁';">{{ item }}</span>->
+                <span class="xz" style="font-family: '方正小篆体';">{{ item }}</span>
+              </div>
+            </div> -->
             <div class="num">数量：{{ unitInfo.characters.length }}</div>
             <span>模式选择：</span>
             <el-radio-group v-model="modeSel">
@@ -52,6 +60,11 @@
         </el-icon>
       </div>
     </div>
+    <div class="right">
+      <div class="btn">
+        <el-icon><Search /></el-icon>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -67,9 +80,11 @@ interface partElementType {
   // elementEntity: HTMLElement | null;
   position: number | undefined;
 }
- 
 
-const partElements: Array<partElementType> = Array.from({ length: textInfo.part.length }, () => ({ position: 0 }));;
+const partElements: Array<partElementType> = Array.from(
+  { length: textInfo.part.length },
+  () => ({ position: 0 })
+);
 const unitInfoHome = unitInfoHomeData();
 const learnInfoHome = learnInfoHomeData();
 const { unitInfo, unitInfoDialogFlog } = storeToRefs(unitInfoHome);
@@ -77,9 +92,7 @@ const modeSel: Ref<string> = ref("select");
 const router = useRouter();
 const partStage: Ref<number> = ref(0);
 const isAtTop: Ref<boolean> = ref(true);
-onMounted(() => {
-
-});
+onMounted(() => {});
 // 监听方法
 watchEffect(() => {
   console.log("unitInfo changed:", unitInfoDialogFlog.value);
@@ -176,6 +189,7 @@ function backTop() {
 
 <style lang="scss" scoped>
 .contain {
+  display: flex;
   .left {
     width: 55%;
     font-weight: 700;
@@ -228,6 +242,25 @@ function backTop() {
         // border: 1px solid #fff;
         background-color: #fff;
       }
+    }
+  }
+  .right {
+    width: 29%;
+    margin: 1.5% 0 0 1%;
+    .btn {
+      position: fixed;
+      right: 0px;
+      border: 1px solid #fff;
+      font-size: 20px;
+      padding: 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      background-color: #fff;
+      outline: 2px solid rgba(242, 230, 231, 0.5);
+    }
+    .btn:hover{
+      outline: 2px solid rgba(64, 158, 255, 0.5);
+      
     }
   }
 }
