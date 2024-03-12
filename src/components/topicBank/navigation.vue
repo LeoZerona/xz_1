@@ -23,13 +23,6 @@
       </el-menu>
     </div>
     <div class="right">
-      <el-button
-        type="primary"
-        :icon="Search"
-        class="search-btn"
-        @click="searchCharacters"
-        >字典查询</el-button
-      >
       <el-switch
         v-model="lang"
         active-color="#ff4949"
@@ -44,42 +37,6 @@
       <el-button type="success">登录</el-button>
     </div>
   </div>
-  <!-- 搜索弹窗 -->
-  <name-slot-dialog
-    class="search-dialog"
-    :dialogFlog="searchDialog"
-    title="字典查询"
-    :dialogConfig="searchConfig.dialogConfig"
-  >
-    <template v-slot:content>
-      <!-- 输入框 -->
-      <el-input
-        v-model="searchConfig.searchKey"
-        style="max-width: 600px"
-        :placeholder="searchConfig.searchTip"
-        class="input-with-select"
-      >
-        <template #append>
-          <el-button :icon="Search" />
-        </template>
-      </el-input>
-      <!-- 内容 -->
-      <div class="search-result">
-        <div class="result">
-          简：
-          <span class="jt"> {{ searchConfig.searchKey }} </span>
-        </div>
-        <div class="result">
-          繁：
-          <span class="ft"> {{ searchConfig.searchKey }} </span>
-        </div>
-        <div class="result">
-          篆：
-          <span class="xz"> {{ searchConfig.searchKey }} </span>
-        </div>
-      </div>
-    </template>
-  </name-slot-dialog>
 </template>
 
 <script setup lang="ts" name="navigation">
