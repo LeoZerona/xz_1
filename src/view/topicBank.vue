@@ -2,40 +2,12 @@
   <navigation></navigation>
   <div class="contain">
     <div class="left">
-      <!-- <part
+      <part
         v-for="item in textInfo.part"
         :key="item.name"
         :data="item.content"
         :id="item.name"
-      ></part> -->
-      <name-slot-dialog
-        title="单元详情"
-        :dialogFlog="unitInfoDialogFlog"
-        class="unit-dialog"
-      >
-        <template v-slot:content>
-          <div class="content">
-            <div class="name">{{ unitInfo.name }}</div>
-            <div class="learn-content">
-              本次学习内容：{{ unitInfo.characters.join("、") }}
-            </div>
-            <div class="num">数量：{{ unitInfo.characters.length }}</div>
-            <span>模式选择：</span>
-            <el-radio-group v-model="modeSel">
-              <el-radio label="select">选择</el-radio>
-              <el-radio label="write">填写</el-radio>
-              <el-radio label="mix">混合</el-radio>
-            </el-radio-group>
-          </div>
-        </template>
-
-        <template v-slot:foot>
-          <div class="dialog-footer">
-            <el-button @click="unitInfoDialogFlog = false">退出</el-button>
-            <el-button type="primary" @click="learnStart"> 开始学习 </el-button>
-          </div>
-        </template>
-      </name-slot-dialog>
+      ></part>
       <!-- 步骤条 -->
       <div class="step-bar" style="height: 300px; max-width: 600px">
         <el-steps direction="vertical" :active="partStage">
@@ -53,41 +25,119 @@
       </div>
     </div>
     <div class="right">
-      <div class="btn" @click="searchValue.searchDrawerFlog = true">
+      <div class="btn" @click="aaa">
         <el-icon><Search /></el-icon>
       </div>
     </div>
   </div>
+  <name-slot-dialog
+    title="单元详情"
+    :dialogFlog="unitInfoDialogFlog"
+    class="unit-dialog"
+  >
+    <template v-slot:content>
+      <div class="content">
+        <div class="name">{{ unitInfo.name }}</div>
+        <div class="learn-content">
+          本次学习内容：{{ unitInfo.characters.join("、") }}
+        </div>
+        <div class="num">数量：{{ unitInfo.characters.length }}</div>
+        <span>模式选择：</span>
+        <el-radio-group v-model="modeSel">
+          <el-radio label="select">选择</el-radio>
+          <el-radio label="write">填写</el-radio>
+          <el-radio label="mix">混合</el-radio>
+        </el-radio-group>
+      </div>
+    </template>
+
+    <template v-slot:foot>
+      <div class="dialog-footer">
+        <el-button type="primary" @click="learnStart">开始学习</el-button>
+        <el-button type="primary" @click="overviewSearchValue.dialogVisiable = true">内容概览</el-button>
+        <el-button @click="unitInfoDialogFlog = false">退出</el-button>
+      </div>
+    </template>
+  </name-slot-dialog>
+  <name-slot-dialog
+    title="内容概览"
+    :dialogFlog="overviewSearchValue.dialogVisiable"
+    :dialogConfig="overviewSearchDialogConfig"
+    class="learn-content-dialog"
+  >
+    <template #content>
+      <el-scrollbar max-height="400px">
+        <div class="overview">
+          单元概览：
+          {{ unitInfo.characters.join("、") }}
+        </div>
+        <div class="search-tool">
+          <el-input
+            v-model="overviewSearchKey"
+            style="width: 240px"
+            placeholder="输入关键字查询"
+            maxlength="1"
+            show-word-limit
+          />
+          <el-select v-model="value" placeholder="Select" style="width: 240px">
+            <el-option
+              v-for="item in options"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
+        </div>
+        <div
+          v-for="(item, index) in unitInfo.characters"
+          :key="index"
+          class="character-unit"
+        >
+          <div class="xz">{{ item }}</div>
+          <div class="answer">
+            <span class="ft">{{ item }}</span>
+            ->
+            <span class="jt">{{ item }}</span>
+          </div>
+        </div>
+      </el-scrollbar>
+    </template>
+  </name-slot-dialog>
   <!-- 抽屉面板 -->
-  <el-drawer
-    v-model="searchValue.searchDrawerFlog"
-    title="字典查字"
-    :direction="direction"
-    :before-close="handleClose"
+  <name-slot-drawer
+    :drawer-config="drawerConfig"
+    :drawer-visiable="searchValue.searchDrawerFlog"
+    :before-close-fn="searchDrawerBeforeClose"
     class="search-drawer"
   >
-    <el-input
-      v-model="searchValue.searchKey"
-      style="width: 360px"
-      :placeholder="searchValue.searchTip"
-      :suffix-icon="Search"
-      class="search-input"
-    />
-    <div class="search-result">
-      <div class="result">
-        简：
-        <div class="jt"></div>
+    <template #header>
+      <span>字典查询</span>
+    </template>
+    <template #content>
+      <el-input
+        v-model="searchValue.searchKey"
+        maxlength="10"
+        :placeholder="searchValue.searchTip"
+        show-word-limit
+        type="text"
+        class="search-input"
+      />
+      <div class="search-result">
+        <div class="result">
+          简：
+          <div class="jt">{{ searchValue.searchKey }}</div>
+        </div>
+        <div class="result">
+          繁：
+          <div class="ft">{{ searchValue.searchKey }}</div>
+        </div>
+        <div class="result">
+          篆：
+          <div class="xz">{{ searchValue.searchKey }}</div>
+        </div>
       </div>
-      <div class="result">
-        繁：
-        <div class="ft"></div>
-      </div>
-      <div class="result">
-        篆：
-        <div class="xz"></div>
-      </div>
-    </div>
-  </el-drawer>
+    </template>
+  </name-slot-drawer>
 </template>
 
 <script setup lang="ts" name="home">
@@ -100,10 +150,20 @@ interface PartType {
   name: string;
 }
 interface partElementType {
-  // elementEntity: HTMLElement | null;
   position: number | undefined;
 }
-
+interface searchValueType {
+  searchKey: string;
+  searchTip: string;
+  searchDrawerFlog: boolean;
+}
+type drawerConfigType = {
+  size: string | number;
+  direction: "rtl" | "ltr" | "ttb" | "btt" | undefined;
+  closeOnClickModal: boolean;
+  closeOnPressEscape: boolean;
+  showClose: boolean;
+};
 const partElements: Array<partElementType> = Array.from(
   { length: textInfo.part.length },
   () => ({ position: 0 })
@@ -115,16 +175,53 @@ const modeSel: Ref<string> = ref("select");
 const router = useRouter();
 const partStage: Ref<number> = ref(0);
 const isAtTop: Ref<boolean> = ref(true);
-const direction = ref<"rtl" | "ltr" | "ttb" | "btt" | undefined>("rtl");
-const searchValue: Ref<any> = ref({
+const searchValue: Ref<searchValueType> = ref({
+  // 搜索所需的变量数据
   searchKey: "",
   searchTip: "请输入文字查询小篆",
   searchDrawerFlog: false,
 });
+const drawerConfig: Ref<drawerConfigType> = ref({
+  size: "30%",
+  direction: "rtl",
+  closeOnClickModal: true,
+  closeOnPressEscape: false,
+  showClose: false,
+});
+const overviewSearchValue: Ref<any> = ref({
+  dialogVisiable: false,
+  searchKey: "",
+  displayModes: [
+    {
+      lable: "不遮挡",
+      value: "",
+    },
+    {
+      lable: "遮挡小篆体",
+      value: "",
+    },
+    {
+      lable: "遮挡简体",
+      value: "",
+    },
+  ],
+  displayMode: "",
+});
+const overviewSearchDialogConfig: Ref<any> = ref({
+  width: 500, // 弹窗宽度
+  appendToBody: true, // Dialog 自身是否插入至 body 元素上。
+  closeOnClickModal: true, // 是否支持点击空白处关闭弹窗
+  closeOnPressEscape: false, // 是否支持通过按下ESC关闭弹窗
+  showClose: false // 是否显示关闭按钮
+});
+const overviewSearchKey: Ref<string> = ref("");
 onMounted(() => {});
 // 监听方法
 watchEffect(() => {
   console.log("unitInfo changed:", unitInfoDialogFlog.value);
+});
+watchEffect(() => {
+  !searchValue.value.searchDrawerFlog ? (searchValue.value.searchKey = "") : "";
 });
 // 监听滚动条所在的区域，对左侧激活区域进行切换
 const debouncedHandleScroll = _.throttle(() => {
@@ -214,6 +311,14 @@ function backTop() {
   }
   requestAnimationFrame(scrollStep); // 开始动画
 }
+function aaa() {
+  console.log("aaaa");
+  searchValue.value.searchDrawerFlog = true;
+}
+/** 右侧搜索抽屉关闭方法 */
+function searchDrawerBeforeClose() {
+  searchValue.value.searchDrawerFlog = false;
+}
 </script>
 
 <style lang="scss" scoped>
@@ -224,19 +329,6 @@ function backTop() {
     font-weight: 700;
     margin: 1.5% 0 0 15%;
     border-radius: 10px;
-
-    .unit-dialog {
-      .content {
-        .name {
-          margin-bottom: 10px;
-        }
-
-        .learn-content {
-          margin-bottom: 10px;
-        }
-      }
-    }
-
     .step-bar {
       position: fixed;
       top: 25%;
@@ -289,6 +381,67 @@ function backTop() {
     }
     .btn:hover {
       outline: 2px solid rgba(64, 158, 255, 0.5);
+    }
+  }
+}
+.unit-dialog {
+  .content {
+    .name {
+      margin-bottom: 10px;
+    }
+
+    .learn-content {
+      margin-bottom: 10px;
+    }
+  }
+}
+.learn-content-dialog {
+  .overview {
+    font-size: 15px;
+    margin-bottom: 10px;
+  }
+  .search-tool {
+    display: flex;
+  }
+  .character-unit {
+    margin-bottom: 15px;
+    .xz {
+      font-family: "方正小篆体";
+      font-size: 60px;
+    }
+    .answer {
+      cursor: pointer;
+      border-radius: 10px;
+      padding-left: 10px;
+      background-color: #e6e9f3;
+      font-size: 30px;
+      .ft {
+        font-family: "汉仪楷体繁";
+      }
+    }
+  }
+}
+.search-drawer {
+  .search-input {
+    width: 360px;
+  }
+  .search-result {
+    margin-top: 30px;
+    .result {
+      margin-top: 10px;
+    }
+    .jt,
+    .ft,
+    .xz {
+      font-size: 50px;
+      font-weight: 700;
+      margin-top: 10px;
+    }
+    .ft {
+      font-family: "汉仪楷体繁";
+    }
+    .xz {
+      font-family: "方正小篆体";
     }
   }
 }
