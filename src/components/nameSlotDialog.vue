@@ -6,9 +6,10 @@
     :show-close="dialogConfig.showClose"
     :close-on-click-modal="dialogConfig.closeOnClickModal"
     :close-on-press-escape="dialogConfig.closeOnPressEscape"
+    :before-close="beforeCloseFn"
   >
     <template #header>
-      {{ title }}
+      <slot name="header"> </slot>
     </template>
     <slot name="content"></slot>
     <template #footer>
@@ -29,10 +30,6 @@ const { dialogFlog } = defineProps({
     type: Boolean,
     require: true,
   },
-  title: {
-    type: String,
-    default: "提示",
-  },
   dialogConfig: {
     type: Object as () => dialogConfigType,
     default: () => ({
@@ -43,6 +40,10 @@ const { dialogFlog } = defineProps({
       showClose: false, // 是否显示关闭按钮
     }),
   },
+  beforeCloseFn:{
+    type: Function,
+    default: ()=>{}
+  }
 });
 // 监听方法
 watchEffect(() => {

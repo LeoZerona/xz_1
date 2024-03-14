@@ -1,6 +1,6 @@
 import { createApp } from "vue";
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
-import './globalStyle.css'
+import './globalStyle.scss'
 import './resert.css'
 import App from "./App.vue";
 //ant-design-vue

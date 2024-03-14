@@ -110,7 +110,7 @@ $vertical-height: 60px;
         position: relative;
         font-size: 25px;
         font-weight: 700;
-        font-family: "方正小篆体";
+        font-family: "FangZhengXiaoZhuan";
       }
 
       .logo::after {
@@ -125,7 +125,7 @@ $vertical-height: 60px;
 
       .text {
         font-size: 25px;
-        font-family: "方正小篆体";
+        font-family: "FangZhengXiaoZhuan";
       }
     }
   }

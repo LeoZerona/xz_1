@@ -30,11 +30,8 @@
       </div>
     </div>
   </div>
-  <name-slot-dialog
-    title="单元详情"
-    :dialogFlog="unitInfoDialogFlog"
-    class="unit-dialog"
-  >
+  <name-slot-dialog :dialogFlog="unitInfoDialogFlog" class="unit-dialog">
+    <template #header> 单元详情 </template>
     <template v-slot:content>
       <div class="content">
         <div class="name">{{ unitInfo.name }}</div>
@@ -54,17 +51,22 @@
     <template v-slot:foot>
       <div class="dialog-footer">
         <el-button type="primary" @click="learnStart">开始学习</el-button>
-        <el-button type="primary" @click="overviewSearchValue.dialogVisiable = true">内容概览</el-button>
+        <el-button
+          type="primary"
+          @click="overviewSearchValue.dialogVisiable = true"
+          >内容概览</el-button
+        >
         <el-button @click="unitInfoDialogFlog = false">退出</el-button>
       </div>
     </template>
   </name-slot-dialog>
   <name-slot-dialog
-    title="内容概览"
     :dialogFlog="overviewSearchValue.dialogVisiable"
     :dialogConfig="overviewSearchDialogConfig"
+    :beforeCloseFn="dialogBeforeClose"
     class="learn-content-dialog"
   >
+    <template #header> 内容概览 </template>
     <template #content>
       <el-scrollbar max-height="400px">
         <div class="overview">
@@ -212,7 +214,7 @@ const overviewSearchDialogConfig: Ref<any> = ref({
   appendToBody: true, // Dialog 自身是否插入至 body 元素上。
   closeOnClickModal: true, // 是否支持点击空白处关闭弹窗
   closeOnPressEscape: false, // 是否支持通过按下ESC关闭弹窗
-  showClose: false // 是否显示关闭按钮
+  showClose: false, // 是否显示关闭按钮
 });
 const overviewSearchKey: Ref<string> = ref("");
 onMounted(() => {});
@@ -314,6 +316,10 @@ function backTop() {
 function aaa() {
   console.log("aaaa");
   searchValue.value.searchDrawerFlog = true;
+}
+/** 关闭单元详情的方法 */
+function dialogBeforeClose() {
+  overviewSearchValue.value.dialogVisiable = false;
 }
 /** 右侧搜索抽屉关闭方法 */
 function searchDrawerBeforeClose() {
