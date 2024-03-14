@@ -32,3 +32,12 @@ body {
 .FangZhengXiaoZhuan {
   font-family: 'FangZhengXiaoZhuan', cursive;
 }
+
+@font-face {
+  font-family: 'HanYiKaiTiFan';
+  src: url('@/assets/font/汉仪楷体繁.ttf') format('truetype');
+}
+
+.HanYiKaiTiFan {
+  font-family: 'FangZhengXiaoZhuan', cursive;
+}

@@ -162,10 +162,10 @@ $vertical-height: 60px;
         color: #000;
       }
       .ft {
-        font-family: '汉仪楷体繁';
+        font-family: 'HanYiKaiTiFan';
       }
       .xz {
-        font-family: '方正小篆体';
+        font-family: 'FangZhengXiaoZhuan';
       }
     }
   }

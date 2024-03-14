@@ -61,7 +61,7 @@ onMounted(() => {
     font-size: 25px;
     line-height: 50px;
     border-radius: 15px;
-    font-family: '方正小篆体';
+    font-family: 'FangZhengXiaoZhuan';
     margin-right: 20px;
     background-color: #f4f4f4;
     border: 1px solid #cfe4ee;

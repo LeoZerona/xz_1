@@ -412,7 +412,7 @@ function searchDrawerBeforeClose() {
   .character-unit {
     margin-bottom: 15px;
     .xz {
-      font-family: "方正小篆体";
+      font-family: "FangZhengXiaoZhuan";
       font-size: 60px;
     }
     .answer {
@@ -422,7 +422,7 @@ function searchDrawerBeforeClose() {
       background-color: #e6e9f3;
       font-size: 30px;
       .ft {
-        font-family: "汉仪楷体繁";
+        font-family: "HanYiKaiTiFan";
       }
     }
   }
@@ -444,10 +444,10 @@ function searchDrawerBeforeClose() {
       margin-top: 10px;
     }
     .ft {
-      font-family: "汉仪楷体繁";
+      font-family: "HanYiKaiTiFan";
     }
     .xz {
-      font-family: "方正小篆体";
+      font-family: "FangZhengXiaoZhuan";
     }
   }
 }

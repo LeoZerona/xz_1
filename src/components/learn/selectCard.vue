@@ -111,7 +111,7 @@ function next(){
       margin-top: 30px;
       font-size: 50px;
       text-align: center;
-      font-family: '方正小篆体';
+      font-family: 'FangZhengXiaoZhuan';
     }
 
     .options {
@@ -160,7 +160,7 @@ function next(){
         margin-top: 10px;
         font-size: 20px;
         .answer-xiaozhuan{
-          font-family: '方正小篆体';
+          font-family: 'FangZhengXiaoZhuan';
         }
       }
       .know{
