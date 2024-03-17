@@ -1,6 +1,13 @@
 <template>
   <!-- 答题区 -->
-  <el-card class="answer-card">
+  <el-card
+    :style="
+      correct !== null && searchBoxValue.visiable
+        ? { left: ' 39.9%' }
+        : { left: ' 50%' }
+    "
+    class="answer-card"
+  >
     <div class="learn-card">
       <div class="title">选择以下正确的选项</div>
       <el-progress
@@ -12,11 +19,14 @@
         :format="format"
       />
       <div class="characters">{{ topic.answer }}</div>
-      <div class="search" @click="searchCharacter">
+      <div
+        class="search"
+        v-show="correct !== null"
+        @click="searchBoxValue.visiable = true"
+      >
         <el-icon><Search /></el-icon>
       </div>
       <!-- 选择题 -->
-      <!-- style="display: none;" -->
       <div class="options" v-show="topic.type === 'select'">
         <el-button
           v-for="(item, index) in topic.options"
@@ -68,7 +78,38 @@
     </el-card>
   </el-card>
   <!-- 搜词区 -->
-  <el-card class="search-card"></el-card>
+  <el-card
+    :style="
+      correct !== null && searchBoxValue.visiable
+        ? { left: '60%' }
+        : { left: ' 50%' }
+    "
+    class="search-card"
+  >
+    <div class="header">
+      <div class="title">{{ searchBoxValue.title }}</div>
+      <el-icon class="icon" @click="searchBoxClose"><Close /></el-icon>
+    </div>
+    <el-input
+      v-model="searchBoxValue.key"
+      :placeholder="searchBoxValue.inputTip"
+      clearable
+      type="text"
+      maxlength="4"
+      show-word-limit
+      class="input-box"
+    />
+    <div class="result">
+      <div class="ft">
+        繁：<span>{{ searchBoxValue.key }}</span>
+      </div>
+      <div class="xz">
+        篆：<span style="font-family: FangZhengXiaoZhuan">{{
+          searchBoxValue.key
+        }}</span>
+      </div>
+    </div>
+  </el-card>
   <name-slot-dialog :dialogFlog="endDialog" title="完成">
     <template #content>
       <div>恭喜你完成本次学习！</div>
@@ -123,6 +164,12 @@ const tipStyle = reactive({
   },
 });
 const percentage: Ref<number> = ref(0);
+const searchBoxValue: Ref<any> = ref({
+  title: "字典查询",
+  visiable: false, // 是否可见
+  inputTip: "请输入汉字进行查询",
+  key: "", // 查询的关键字
+});
 onMounted(() => {});
 // 监听correct
 watchEffect(() => {
@@ -140,6 +187,7 @@ watchEffect(() => {
     };
     tipStyle.head.text = "可惜";
   }
+  searchBoxValue.value.visiable = false
 });
 function initData() {
   correct.value = null;
@@ -149,12 +197,8 @@ function judge(select: string) {
   topic.answer === select ? (correct.value = true) : (correct.value = false);
 }
 function next() {
-  console.log("啥玩意啊草？", topic);
-
   initData();
   percentage.value = Math.floor((topic.index / topic.count) * 100);
-  console.log("啥玩意？", percentage.value);
-
   // 赋值进度条
   topic.index === topic.count - 1 ? (endDialog.value = true) : emit("next");
 }
@@ -168,9 +212,10 @@ function backHome() {
     }
   });
 }
-function searchCharacter(){
-  console.log('文字检索');
-  
+/** 关闭文字搜索区  */
+function searchBoxClose() {
+  searchBoxValue.value.visiable = false;
+  searchBoxValue.value.key = "";
 }
 </script>
 
@@ -182,6 +227,9 @@ function searchCharacter(){
   transform: translate(-50%, -50%);
   width: 20%;
   height: 550px;
+  border-right: 0px;
+  z-index: 1;
+  transition: all 0.5s ease;
 
   .learn-card {
     .title {
@@ -301,6 +349,45 @@ function searchCharacter(){
 
   .btn:focus {
     color: rgba($color: #191b26, $alpha: 0.5);
+  }
+}
+
+.search-card {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 20%;
+  height: 550px;
+  transition: all 0.5s ease;
+  .header {
+    display: flex;
+    justify-content: space-between;
+    .title {
+      margin-bottom: 20px;
+    }
+    .icon {
+      cursor: pointer;
+    }
+  }
+
+  .result {
+    margin-top: 30px;
+    .ft span,
+    .xz span {
+      font-size: 70px;
+    }
+    .ft {
+      margin-bottom: 20px;
+      span {
+        font-family: HanYiKaiTiFan;
+      }
+    }
+    .xz {
+      span {
+        font-family: fangzFangZhengXiaoZhuanheng;
+      }
+    }
   }
 }
 </style>

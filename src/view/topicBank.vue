@@ -75,15 +75,15 @@
         </div>
         <div class="search-tool">
           <el-input
-            v-model="overviewSearchKey"
-            style="width: 240px"
-            placeholder="输入关键字查询"
+            v-model="overviewSearchValue.searchKey"
+            :placeholder="overviewSearchValue.searchInputTip"
             maxlength="1"
             show-word-limit
+            class="input-box"
           />
-          <el-select v-model="value" placeholder="Select" style="width: 240px">
+          <el-select class="model-sel" v-model="overviewSearchValue.displayMode" :placeholder="overviewSearchValue.modelTip">
             <el-option
-              v-for="item in options"
+              v-for="item in overviewSearchValue.displayModeOptions"
               :key="item.value"
               :label="item.label"
               :value="item.value"
@@ -166,6 +166,18 @@ type drawerConfigType = {
   closeOnPressEscape: boolean;
   showClose: boolean;
 };
+type selOptionItemType = {
+  label: string,
+  value: string,
+}
+type overviewSearchValueType = {
+  dialogVisiable: boolean,
+  searchKey: string,
+  searchInputTip: string,
+  modelTip: string,
+  displayModeOptions: Array<selOptionItemType>,
+  displayMode: string,
+}
 const partElements: Array<partElementType> = Array.from(
   { length: textInfo.part.length },
   () => ({ position: 0 })
@@ -190,21 +202,23 @@ const drawerConfig: Ref<drawerConfigType> = ref({
   closeOnPressEscape: false,
   showClose: false,
 });
-const overviewSearchValue: Ref<any> = ref({
+const overviewSearchValue: Ref<overviewSearchValueType> = ref({
   dialogVisiable: false,
   searchKey: "",
-  displayModes: [
+  searchInputTip:'请输入关键字查询',
+  modelTip:'遮挡模式',
+  displayModeOptions: [
     {
-      lable: "不遮挡",
-      value: "",
+      label: "不遮挡",
+      value: "noCover",
     },
     {
-      lable: "遮挡小篆体",
-      value: "",
+      label: "遮挡小篆体",
+      value: "coverXz",
     },
     {
-      lable: "遮挡简体",
-      value: "",
+      label: "遮挡简体",
+      value: "coverJt",
     },
   ],
   displayMode: "",
@@ -408,6 +422,14 @@ function searchDrawerBeforeClose() {
   }
   .search-tool {
     display: flex;
+    margin: 10px 0;
+    .input-box{
+      width: 350px;
+      margin-right: 10px;
+    }
+    .model-sel{
+      width: 100px;
+    }
   }
   .character-unit {
     margin-bottom: 15px;
