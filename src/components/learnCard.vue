@@ -116,7 +116,7 @@
     </template>
     <template #foot>
       <el-button @click="endDialog = false">取消</el-button>
-      <el-button type="primary" @click="backHome">确认</el-button>
+      <el-button type="primary" @click="backTopicBank">确认</el-button>
     </template>
   </name-slot-dialog>
 </template>
@@ -202,10 +202,10 @@ function next() {
   // 赋值进度条
   topic.index === topic.count - 1 ? (endDialog.value = true) : emit("next");
 }
-function backHome() {
+function backTopicBank() {
   endDialog.value = false;
   // 使用replace进行路由跳转
-  router.replace({ path: "/home" }).catch((err: any) => {
+  router.replace({ path: "/topic_bank" }).catch((err: any) => {
     // 处理错误（如果有的话），但通常情况下，重复导航到相同路由会报错。
     if (err.name !== "NavigationDuplicated") {
       console.error("路由跳转路径相同！", err);

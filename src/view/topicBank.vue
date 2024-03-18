@@ -81,7 +81,12 @@
             show-word-limit
             class="input-box"
           />
-          <el-select class="model-sel" v-model="overviewSearchValue.displayMode" :placeholder="overviewSearchValue.modelTip">
+          <el-select
+            class="model-sel"
+            @change="overviewModelChange"
+            v-model="overviewSearchValue.displayMode"
+            :placeholder="overviewSearchValue.modelTip"
+          >
             <el-option
               v-for="item in overviewSearchValue.displayModeOptions"
               :key="item.value"
@@ -97,9 +102,15 @@
         >
           <div class="xz">{{ item }}</div>
           <div class="answer">
-            <span class="ft">{{ item }}</span>
-            ->
-            <span class="jt">{{ item }}</span>
+            <span class="ft">
+              {{ overviewSearchValue.displayMode === "coverJt" ? " " : item }}
+            </span>
+            <span>
+              {{ overviewSearchValue.displayMode === "coverJt" ? " " : "->" }}
+            </span>
+            <span class="jt">
+              {{ overviewSearchValue.displayMode === "coverJt" ? "" : item }}
+            </span>
           </div>
         </div>
       </el-scrollbar>
@@ -167,17 +178,17 @@ type drawerConfigType = {
   showClose: boolean;
 };
 type selOptionItemType = {
-  label: string,
-  value: string,
-}
+  label: string;
+  value: string;
+};
 type overviewSearchValueType = {
-  dialogVisiable: boolean,
-  searchKey: string,
-  searchInputTip: string,
-  modelTip: string,
-  displayModeOptions: Array<selOptionItemType>,
-  displayMode: string,
-}
+  dialogVisiable: boolean;
+  searchKey: string;
+  searchInputTip: string;
+  modelTip: string;
+  displayModeOptions: Array<selOptionItemType>;
+  displayMode: string;
+};
 const partElements: Array<partElementType> = Array.from(
   { length: textInfo.part.length },
   () => ({ position: 0 })
@@ -205,8 +216,8 @@ const drawerConfig: Ref<drawerConfigType> = ref({
 const overviewSearchValue: Ref<overviewSearchValueType> = ref({
   dialogVisiable: false,
   searchKey: "",
-  searchInputTip:'请输入关键字查询',
-  modelTip:'遮挡模式',
+  searchInputTip: "请输入关键字查询",
+  modelTip: "遮挡模式",
   displayModeOptions: [
     {
       label: "不遮挡",
@@ -339,6 +350,10 @@ function dialogBeforeClose() {
 function searchDrawerBeforeClose() {
   searchValue.value.searchDrawerFlog = false;
 }
+/** 概览窗口显示模式切换 */
+function overviewModelChange(value: any) {
+  overviewSearchValue.value.displayMode = value;
+}
 </script>
 
 <style lang="scss" scoped>
@@ -423,11 +438,11 @@ function searchDrawerBeforeClose() {
   .search-tool {
     display: flex;
     margin: 10px 0;
-    .input-box{
+    .input-box {
       width: 350px;
       margin-right: 10px;
     }
-    .model-sel{
+    .model-sel {
       width: 100px;
     }
   }
@@ -443,6 +458,8 @@ function searchDrawerBeforeClose() {
       padding-left: 10px;
       background-color: #e6e9f3;
       font-size: 30px;
+      width: 97%;
+      height: 30px;
       .ft {
         font-family: "HanYiKaiTiFan";
       }
