@@ -198,8 +198,8 @@ function judge(select: string) {
 }
 function next() {
   initData();
-  percentage.value = Math.floor((topic.index / topic.count) * 100);
   // 赋值进度条
+  percentage.value = Math.floor((topic.index / topic.count) * 100);
   topic.index === topic.count - 1 ? (endDialog.value = true) : emit("next");
 }
 function backTopicBank() {

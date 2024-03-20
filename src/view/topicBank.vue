@@ -53,7 +53,7 @@
         <el-button type="primary" @click="learnStart">开始学习</el-button>
         <el-button
           type="primary"
-          @click="overviewSearchValue.dialogVisiable = true"
+          @click="overviewDialogValue.dialogVisiable = true"
           >内容概览</el-button
         >
         <el-button @click="unitInfoDialogFlog = false">退出</el-button>
@@ -61,55 +61,89 @@
     </template>
   </name-slot-dialog>
   <name-slot-dialog
-    :dialogFlog="overviewSearchValue.dialogVisiable"
+    :dialogFlog="overviewDialogValue.dialogVisiable"
     :dialogConfig="overviewSearchDialogConfig"
     :beforeCloseFn="dialogBeforeClose"
     class="learn-content-dialog"
   >
     <template #header> 内容概览 </template>
     <template #content>
-      <el-scrollbar max-height="400px">
-        <div class="overview">
-          单元概览：
-          {{ unitInfo.characters.join("、") }}
-        </div>
-        <div class="search-tool">
-          <el-input
-            v-model="overviewSearchValue.searchKey"
-            :placeholder="overviewSearchValue.searchInputTip"
-            maxlength="1"
-            show-word-limit
-            class="input-box"
+      <div class="overview">
+        单元概览：
+        {{ unitInfo.characters.join("、") }}
+      </div>
+      <div class="search-tool">
+        <el-input
+          v-model="overviewDialogValue.searchKey"
+          :placeholder="overviewDialogValue.searchInputTip"
+          :maxlength="overviewDialogValue.searchKeyLength"
+          show-word-limit
+          class="input-box"
+        />
+        <el-select
+          class="model-sel"
+          @change="overviewModelChange"
+          v-model="overviewDialogValue.displayMode"
+          :placeholder="overviewDialogValue.modelTip"
+        >
+          <el-option
+            v-for="item in overviewDialogValue.displayModeOptions"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
           />
-          <el-select
-            class="model-sel"
-            @change="overviewModelChange"
-            v-model="overviewSearchValue.displayMode"
-            :placeholder="overviewSearchValue.modelTip"
-          >
-            <el-option
-              v-for="item in overviewSearchValue.displayModeOptions"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            />
-          </el-select>
-        </div>
+        </el-select>
+      </div>
+      <el-scrollbar max-height="350px">
         <div
-          v-for="(item, index) in unitInfo.characters"
+          v-for="(item, index) in overviewDialogValue.charactersList"
           :key="index"
           class="character-unit"
         >
-          <div class="xz">{{ item }}</div>
-          <div class="answer">
+          <div
+            class="xz"
+            :style="
+              overviewDialogValue.displayMode === 'coverXz' && !item.show
+                ? { backgroundColor: '#e6e9f3', cursor: 'pointer' }
+                : {}
+            "
+            @click="switchShow(index)"
+          >
+            {{
+              overviewDialogValue.displayMode === "coverXz" && !item.show
+                ? " "
+                : item.characters
+            }}
+          </div>
+          <div
+            class="answer"
+            :style="
+              overviewDialogValue.displayMode === 'coverJt' && !item.show
+                ? { cursor: 'pointer' }
+                : {}
+            "
+            @click="switchShow(index)"
+          >
             <span class="ft">
-              {{ overviewSearchValue.displayMode === "coverJt" ? " " : item }}
+              {{
+                overviewDialogValue.displayMode === "coverJt" && !item.show
+                  ? " "
+                  : item.characters
+              }}
             </span>
             <span>
-              {{ overviewSearchValue.displayMode === "coverJt" ? " " : "->" }}
+              {{
+                overviewDialogValue.displayMode === "coverJt" && !item.show
+                  ? " "
+                  : "->"
+              }}
             </span>
-            <span class="jt">
-              {{ overviewSearchValue.displayMode === "coverJt" ? "" : item }}
+            <span class="jt" @click="switchShow(index)">
+              {{
+                overviewDialogValue.displayMode === "coverJt" && !item.show
+                  ? ""
+                  : item.characters
+              }}
             </span>
           </div>
         </div>
@@ -159,6 +193,7 @@ import { textInfo } from "@/static/text_res";
 import { unitInfoHomeData, learnInfoHomeData } from "@/store/home";
 import { storeToRefs } from "pinia";
 import { Search } from "@element-plus/icons-vue";
+import func from "../../vue-temp/vue-editor-bridge";
 interface PartType {
   name: string;
 }
@@ -181,13 +216,15 @@ type selOptionItemType = {
   label: string;
   value: string;
 };
-type overviewSearchValueType = {
+type overviewDialogValueType = {
   dialogVisiable: boolean;
+  searchKeyLength: number;
   searchKey: string;
   searchInputTip: string;
   modelTip: string;
   displayModeOptions: Array<selOptionItemType>;
   displayMode: string;
+  characters: Array<any>;
 };
 const partElements: Array<partElementType> = Array.from(
   { length: textInfo.part.length },
@@ -213,8 +250,9 @@ const drawerConfig: Ref<drawerConfigType> = ref({
   closeOnPressEscape: false,
   showClose: false,
 });
-const overviewSearchValue: Ref<overviewSearchValueType> = ref({
+const overviewDialogValue: Ref<overviewDialogValueType> = ref({
   dialogVisiable: false,
+  searchKeyLength: 5,
   searchKey: "",
   searchInputTip: "请输入关键字查询",
   modelTip: "遮挡模式",
@@ -233,22 +271,38 @@ const overviewSearchValue: Ref<overviewSearchValueType> = ref({
     },
   ],
   displayMode: "",
+  charactersList: [],
 });
 const overviewSearchDialogConfig: Ref<any> = ref({
   width: 500, // 弹窗宽度
   appendToBody: true, // Dialog 自身是否插入至 body 元素上。
   closeOnClickModal: true, // 是否支持点击空白处关闭弹窗
-  closeOnPressEscape: false, // 是否支持通过按下ESC关闭弹窗
-  showClose: false, // 是否显示关闭按钮
+  closeOnPressEscape: true, // 是否支持通过按下ESC关闭弹窗
+  showClose: true, // 是否显示关闭按钮
 });
-const overviewSearchKey: Ref<string> = ref("");
 onMounted(() => {});
-// 监听方法
-watchEffect(() => {
-  console.log("unitInfo changed:", unitInfoDialogFlog.value);
-});
+/** 搜索抽屉面板是否显示 */
 watchEffect(() => {
   !searchValue.value.searchDrawerFlog ? (searchValue.value.searchKey = "") : "";
+});
+/**  */
+watchEffect(() => {
+  if (unitInfo.value.characters) {
+    // 内容概览下方内容数据初始化
+    unitInfo.value.characters.forEach((item: string) => {
+      const obj = {
+        characters: item,
+        show: false,
+      };
+      overviewDialogValue.value.charactersList.push(obj);
+    });
+    // 内容概览上方搜索框
+    overviewDialogValue.value.characters = unitInfo.value.characters.filter(
+      (char: string) => {
+        return char.includes(overviewDialogValue.value.searchKey);
+      }
+    );
+  }
 });
 // 监听滚动条所在的区域，对左侧激活区域进行切换
 const debouncedHandleScroll = _.throttle(() => {
@@ -344,7 +398,7 @@ function aaa() {
 }
 /** 关闭单元详情的方法 */
 function dialogBeforeClose() {
-  overviewSearchValue.value.dialogVisiable = false;
+  overviewDialogValue.value.dialogVisiable = false;
 }
 /** 右侧搜索抽屉关闭方法 */
 function searchDrawerBeforeClose() {
@@ -352,7 +406,16 @@ function searchDrawerBeforeClose() {
 }
 /** 概览窗口显示模式切换 */
 function overviewModelChange(value: any) {
-  overviewSearchValue.value.displayMode = value;
+  console.log("遮挡模式切换：", value);
+  overviewDialogValue.value.displayMode = value;
+  overviewDialogValue.value.charactersList.forEach((item: any) => {
+    item.show = false;
+  });
+}
+/** 切换显示模式 */
+function switchShow(index: number) {
+  overviewDialogValue.value.charactersList[index].show =
+    !overviewDialogValue.value.charactersList[index].show;
 }
 </script>
 
@@ -449,11 +512,14 @@ function overviewModelChange(value: any) {
   .character-unit {
     margin-bottom: 15px;
     .xz {
+      width: 60px;
+      height: 60px;
+      border-radius: 10px;
+      margin-bottom: 10px;
       font-family: "FangZhengXiaoZhuan";
       font-size: 60px;
     }
     .answer {
-      cursor: pointer;
       border-radius: 10px;
       padding-left: 10px;
       background-color: #e6e9f3;
