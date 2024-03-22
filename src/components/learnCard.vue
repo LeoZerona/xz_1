@@ -114,7 +114,7 @@
     <template #content>
       <div>恭喜你完成本次学习！</div>
     </template>
-    <template #foot>
+    <template #footer>
       <el-button @click="endDialog = false">取消</el-button>
       <el-button type="primary" @click="backTopicBank">确认</el-button>
     </template>
@@ -124,7 +124,6 @@
 <script lang="ts" setup name="unitCard">
 import { unitData } from "@/store/unit.ts";
 import { storeToRefs } from "pinia";
-import func from "../../vue-temp/vue-editor-bridge";
 const unit = unitData();
 const { endDialog } = storeToRefs(unit);
 interface TopicType {

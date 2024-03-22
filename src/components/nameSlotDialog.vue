@@ -13,7 +13,7 @@
     </template>
     <slot name="content"></slot>
     <template #footer>
-      <slot name="foot"></slot>
+      <slot name="footer"></slot>
     </template>
   </el-dialog>
 </template>

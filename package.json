@@ -8,8 +8,8 @@
     "preview": "vite preview",
     "build": "vite build",
     "typecheck": "vue-tsc",
-    "predeploy":"npm run build",
-    "deploy":"gh-pages -d dist -r https://github.com/LeoZerona/xz_1.git -b gh-pages"
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist -r https://github.com/LeoZerona/xz_1.git -b gh-pages"
   },
   "dependencies": {
     "@ant-design/icons-vue": "^7.0.1",
@@ -17,6 +17,7 @@
     "ant-design-vue": "^4.1.2",
     "axios": "^1.6.7",
     "cors": "^2.8.5",
+    "echarts": "^5.5.0",
     "element-plus": "^2.5.6",
     "express": "^4.18.2",
     "lodash": "^4.17.21",

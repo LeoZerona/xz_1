@@ -48,7 +48,7 @@
       </div>
     </template>
 
-    <template v-slot:foot>
+    <template v-slot:footer>
       <div class="dialog-footer">
         <el-button type="primary" @click="learnStart">开始学习</el-button>
         <el-button
