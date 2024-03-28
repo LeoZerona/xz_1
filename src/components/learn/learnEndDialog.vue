@@ -1,11 +1,20 @@
 <template>
-  123
+  <!-- <characters-big-look></characters-big-look> -->
+  <!-- 学习结束之后的弹窗 -->
   <name-slot-dialog :dialogFlog="true" :dialogConfig="dialogConfig">
     <template #header>恭喜你！完成答题</template>
     <template #content>
-      <div id="chart" style="width: 666px; height: 300px"></div>
-      <el-tabs type="border-card">
-        <el-tab-pane label="全部">User</el-tab-pane>
+      <div id="chart" style="width: 666px; height: 270px"></div>
+      <el-tabs type="border-card" class="topic-border">
+        <el-tab-pane label="全部">
+          <div class="topic" style="color: #ff4343">
+            <div class="xz">简</div>
+            |
+            <div class="ft">简</div>
+            |
+            <div class="jt">简</div>
+          </div>
+        </el-tab-pane>
         <el-tab-pane label="正确">Config</el-tab-pane>
         <el-tab-pane label="错题">Role</el-tab-pane>
       </el-tabs>
@@ -92,7 +101,6 @@ let correctPercent = ((data1[0] / total) * 100).toFixed(1) + "%";
 let wrongPercent = ((data1[1] / total) * 100).toFixed(1) + "%";
 
 const option: any = {
-  // backgroundColor: "#04243E",
   tooltip: {
     show: true,
     position: function (point, params, dom, rect, size) {
@@ -110,13 +118,7 @@ const option: any = {
         params.seriesIndex === 0 &&
         params.dataIndex === 0
       ) {
-        return (
-          "正确率：" +
-          correctPercent +
-          "<br>" +
-          "正确数：" +
-          data1[0]
-        );
+        return "正确率：" + correctPercent + "<br>" + "正确数：" + data1[0];
       } else if (params.seriesType === "pie" && params.dataIndex === 2) {
         return "错误率：" + wrongPercent + "<br>" + "错误数：" + data1[1];
       } else {
@@ -253,4 +255,37 @@ onMounted(() => {
 });
 </script>
 
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+.topic-border {
+  .topic {
+    display: flex;
+    font-size: 25px;
+    background-color: #e6e9f3;
+    border-radius: 15px;
+    padding: 5px;
+    cursor: pointer;
+    .xz,
+    .ft,
+    .jt {
+      margin: 0 5px;
+      font-weight: 700;
+    }
+    .xz {
+      font-family: "FangZhengXiaoZhuan";
+    }
+    .ft {
+      font-family: "HanYiKaiTiFan";
+    }
+  }
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* 半透明灰色背景 */
+  z-index: 9999;
+}
+</style>

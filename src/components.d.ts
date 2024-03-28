@@ -7,6 +7,10 @@ export {}
 
 declare module 'vue' {
   export interface GlobalComponents {
+    CharactersBigCard: typeof import('./components/learn/learnEndDialog/charactersBigLook/charactersBigCard.vue')['default']
+    CharactersBigLook: typeof import('./components/learn/learnEndDialog/charactersBigLook.vue')['default']
+    CharactersBugCard: typeof import('./components/learn/learnEndDialog/charactersBugCard.vue')['default']
+    CharactersCard: typeof import('./components/learn/learnEndDialog/charactersCard.vue')['default']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElCard: typeof import('element-plus/es')['ElCard']
     ElCol: typeof import('element-plus/es')['ElCol']

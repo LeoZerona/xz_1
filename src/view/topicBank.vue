@@ -224,7 +224,8 @@ type overviewDialogValueType = {
   modelTip: string;
   displayModeOptions: Array<selOptionItemType>;
   displayMode: string;
-  characters: Array<any>;
+  charactersList: Array<any>;
+  charactersListClone: Array<any>;
 };
 const partElements: Array<partElementType> = Array.from(
   { length: textInfo.part.length },
@@ -272,6 +273,7 @@ const overviewDialogValue: Ref<overviewDialogValueType> = ref({
   ],
   displayMode: "",
   charactersList: [],
+  charactersListClone: [],
 });
 const overviewSearchDialogConfig: Ref<any> = ref({
   width: 500, // 弹窗宽度
@@ -285,25 +287,40 @@ onMounted(() => {});
 watchEffect(() => {
   !searchValue.value.searchDrawerFlog ? (searchValue.value.searchKey = "") : "";
 });
-/**  */
+/** 内容预览小窗赋值 */
 watchEffect(() => {
   if (unitInfo.value.characters) {
+    overviewDialogValue.value.charactersList = [];
     // 内容概览下方内容数据初始化
     unitInfo.value.characters.forEach((item: string) => {
       const obj = {
+        index: overviewDialogValue.value.charactersList.length,
         characters: item,
         show: false,
       };
       overviewDialogValue.value.charactersList.push(obj);
     });
-    // 内容概览上方搜索框
-    overviewDialogValue.value.characters = unitInfo.value.characters.filter(
-      (char: string) => {
-        return char.includes(overviewDialogValue.value.searchKey);
-      }
+    overviewDialogValue.value.charactersListClone = JSON.parse(
+      JSON.stringify(overviewDialogValue.value.charactersList)
     );
   }
 });
+
+watchEffect(() => {
+  console.log("emmm", overviewDialogValue.value.searchKey);
+
+  if (
+    unitInfo.value.charactersList &&
+    unitInfo.value.charactersList.length > 0
+  ) {
+    overviewDialogValue.value.characters =
+      unitInfo.value.charactersListClone.filter((itme: any) => {
+        return itme.characters.includes(overviewDialogValue.value.searchKey);
+      });
+  }
+});
+// 内容概览上方搜索框
+
 // 监听滚动条所在的区域，对左侧激活区域进行切换
 const debouncedHandleScroll = _.throttle(() => {
   textInfo.part.forEach((item: PartType, index: number) => {

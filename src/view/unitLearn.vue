@@ -1,6 +1,7 @@
 <template>
   <el-icon class="icon" @click="goBack"><Back /></el-icon>
   <!-- <learn-card :topic="topic" @next="nextTopic"></learn-card> -->
+  <!-- 答题结束时显示的弹窗 -->
   <learn-end-dialog></learn-end-dialog>
 </template>
 
@@ -51,34 +52,36 @@ onMounted(() => {
   initData();
 });
 function initData() {
-  // unitInfoClone.value.characters = JSON.parse(JSON.stringify(unitInfo.value)); // 获取选择单元的数据
-  unitInfoClone.value.characters = [
-    "冖",
-    "讠",
-    "凵",
-    "卩",
-    "阝",
-    "刀",
-    "力",
-    "又",
-    "厶",
-    "廴",
-    "干",
-    "艹",
-    "屮",
-    "彳",
-    "巛",
-    "川",
-    "辶",
-    "寸",
-    "大",
-    "飞",
-    "彑",
-    "工",
-    "弓",
-    "廾",
-    "广",
-  ];
+  unitInfoClone.value.characters = JSON.parse(
+    JSON.stringify(unitInfo.value.characters)
+  ); // 获取选择单元的数据
+  // unitInfoClone.value.characters = [
+  //   "冖",
+  //   "讠",
+  //   "凵",
+  //   "卩",
+  //   "阝",
+  //   "刀",
+  //   "力",
+  //   "又",
+  //   "厶",
+  //   "廴",
+  //   "干",
+  //   "艹",
+  //   "屮",
+  //   "彳",
+  //   "巛",
+  //   "川",
+  //   "辶",
+  //   "寸",
+  //   "大",
+  //   "飞",
+  //   "彑",
+  //   "工",
+  //   "弓",
+  //   "廾",
+  //   "广",
+  // ];
   unitInfoClone.value.model = {
     types: [],
     options: [],
