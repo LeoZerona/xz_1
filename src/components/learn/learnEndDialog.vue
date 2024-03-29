@@ -1,5 +1,5 @@
 <template>
-  <!-- <characters-big-look></characters-big-look> -->
+  <characters-big-look></characters-big-look>
   <!-- 学习结束之后的弹窗 -->
   <name-slot-dialog :dialogFlog="true" :dialogConfig="dialogConfig">
     <template #header>恭喜你！完成答题</template>

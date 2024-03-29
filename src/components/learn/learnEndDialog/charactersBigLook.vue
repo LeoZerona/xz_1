@@ -1,11 +1,13 @@
 <template>
+  <div @click="showOverlay">显示图层蒙版</div>
   <!-- 图层蒙版 -->
-  <div class="overlay" v-if="showOverlay" @click="showOverlay = false">
+  <div class="overlay" v-if="overlayFlag" @click="hideOverlayWithDelay">
     <characters-big-card
       v-for="(item, index) in bigStyles"
       :key="index"
       :styleConfig="item"
       character="办"
+      :show="showCard"
     ></characters-big-card>
   </div>
 </template>
@@ -17,15 +19,8 @@ type styleConfigType = {
   };
   fontFamily: string;
 };
-const showOverlay = ref(true);
-
-const addOverlay = () => {
-  showOverlay.value = true;
-};
-
-const removeOverlay = () => {
-  showOverlay.value = false;
-};
+const overlayFlag = ref(true);
+const showCard = ref(true);
 
 const bigStyles: Array<styleConfigType> = [
   {
@@ -50,6 +45,17 @@ const bigStyles: Array<styleConfigType> = [
     fontFamily: "华文楷体",
   },
 ];
+function showOverlay() {
+  overlayFlag.value = true;
+  showCard.value = true;
+}
+
+function hideOverlayWithDelay() {
+  showCard.value = false;
+  setTimeout(() => {
+    overlayFlag.value = false;
+  }, 400); // 0.4秒后隐藏 overlay
+}
 </script>
 <style scoped lang="scss">
 .overlay {

@@ -1,8 +1,11 @@
 <template>
+  <!-- 单元学习页面 -->
   <el-icon class="icon" @click="goBack"><Back /></el-icon>
   <!-- <learn-card :topic="topic" @next="nextTopic"></learn-card> -->
   <!-- 答题结束时显示的弹窗 -->
-  <learn-end-dialog></learn-end-dialog>
+  <!-- <learn-end-dialog></learn-end-dialog> -->
+  <characters-big-look></characters-big-look>
+
 </template>
 
 <script lang="ts" setup name="unitLearn">
