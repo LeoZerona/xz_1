@@ -2,12 +2,12 @@
   <navigation></navigation>
   <div class="contain">
     <div class="left">
-      <part
+      <!-- <part
         v-for="item in textInfo.part"
         :key="item.name"
         :data="item.content"
         :id="item.name"
-      ></part>
+      ></part> -->
       <name-slot-dialog
         title="单元详情"
         :dialogFlog="unitInfoDialogFlog"
@@ -19,14 +19,6 @@
             <div class="learn-content">
               本次学习内容：{{ unitInfo.characters.join("、") }}
             </div>
-            <!-- <div class="learn-content">
-              本次学习内容：
-              <div v-for="(item, index) in unitInfo.characters" :key="index">
-                <span class="jt">{{ item }}</span> ->
-                <span class="ft" style="font-family: '汉仪楷体繁';">{{ item }}</span>->
-                <span class="xz" style="font-family: '方正小篆体';">{{ item }}</span>
-              </div>
-            </div> -->
             <div class="num">数量：{{ unitInfo.characters.length }}</div>
             <span>模式选择：</span>
             <el-radio-group v-model="modeSel">
@@ -61,11 +53,41 @@
       </div>
     </div>
     <div class="right">
-      <div class="btn">
+      <div class="btn" @click="searchValue.searchDrawerFlog = true">
         <el-icon><Search /></el-icon>
       </div>
     </div>
   </div>
+  <!-- 抽屉面板 -->
+  <el-drawer
+    v-model="searchValue.searchDrawerFlog"
+    title="字典查字"
+    :direction="direction"
+    :before-close="handleClose"
+    class="search-drawer"
+  >
+    <el-input
+      v-model="searchValue.searchKey"
+      style="width: 360px"
+      :placeholder="searchValue.searchTip"
+      :suffix-icon="Search"
+      class="search-input"
+    />
+    <div class="search-result">
+      <div class="result">
+        简：
+        <div class="jt"></div>
+      </div>
+      <div class="result">
+        繁：
+        <div class="ft"></div>
+      </div>
+      <div class="result">
+        篆：
+        <div class="xz"></div>
+      </div>
+    </div>
+  </el-drawer>
 </template>
 
 <script setup lang="ts" name="home">
@@ -73,6 +95,7 @@ import _ from "lodash";
 import { textInfo } from "@/static/text_res";
 import { unitInfoHomeData, learnInfoHomeData } from "@/store/home";
 import { storeToRefs } from "pinia";
+import { Search } from "@element-plus/icons-vue";
 interface PartType {
   name: string;
 }
@@ -92,6 +115,12 @@ const modeSel: Ref<string> = ref("select");
 const router = useRouter();
 const partStage: Ref<number> = ref(0);
 const isAtTop: Ref<boolean> = ref(true);
+const direction = ref<"rtl" | "ltr" | "ttb" | "btt" | undefined>("rtl");
+const searchValue: Ref<any> = ref({
+  searchKey: "",
+  searchTip: "请输入文字查询小篆",
+  searchDrawerFlog: false,
+});
 onMounted(() => {});
 // 监听方法
 watchEffect(() => {
@@ -258,9 +287,8 @@ function backTop() {
       background-color: #fff;
       outline: 2px solid rgba(242, 230, 231, 0.5);
     }
-    .btn:hover{
+    .btn:hover {
       outline: 2px solid rgba(64, 158, 255, 0.5);
-      
     }
   }
 }
