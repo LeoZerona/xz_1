@@ -1,7 +1,7 @@
 <template>
-  <characters-big-look></characters-big-look>
+  <!-- <characters-big-look></characters-big-look> -->
   <!-- 学习结束之后的弹窗 -->
-  <name-slot-dialog :dialogFlog="true" :dialogConfig="dialogConfig">
+  <name-slot-dialog :dialogFlog="endDialog" :dialogConfig="dialogConfig">
     <template #header>恭喜你！完成答题</template>
     <template #content>
       <div id="chart" style="width: 666px; height: 270px"></div>
@@ -29,12 +29,36 @@
 
 <script setup lang="ts">
 import * as echarts from "echarts";
+import { unitData } from "@/store/unit";
+import { storeToRefs } from "pinia";
+const unit = unitData();
+const { endDialog, errorTopics } = storeToRefs(unit);
 const dialogConfig: Ref<any> = ref({
   width: 700, // 弹窗宽度
   appendToBody: true, // Dialog 自身是否插入至 body 元素上。
   closeOnClickModal: true, // 是否支持点击空白处关闭弹窗
   closeOnPressEscape: true, // 是否支持通过按下ESC关闭弹窗
   showClose: true, // 是否显示关闭按钮
+});
+
+onMounted(() => {
+  // console.log("有点烦！！！", endDialog, errorTopics);
+});
+// 监听 myValue 的变化
+watch(endDialog, (newVal: boolean) => {
+  if (newVal) {
+    console.log('错题数据：', errorTopics.value);
+    
+    nextTick(() => {
+      const chartDom = document.getElementById("chart");
+      if (chartDom) {
+        const myChart = echarts.init(chartDom);
+        option && myChart.setOption(option);
+      } else {
+        console.error('找不到 ID 为 "chart" 的元素');
+      }
+    });
+  }
 });
 
 let color = ["#409eff", "#ff4343"];
@@ -241,18 +265,6 @@ const option: any = {
     },
   ],
 };
-
-onMounted(() => {
-  nextTick(() => {
-    const chartDom = document.getElementById("chart");
-    if (chartDom) {
-      const myChart = echarts.init(chartDom);
-      option && myChart.setOption(option);
-    } else {
-      console.error('找不到 ID 为 "chart" 的元素');
-    }
-  });
-});
 </script>
 
 <style scoped lang="scss">

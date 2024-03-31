@@ -1,11 +1,10 @@
 <template>
   <!-- 单元学习页面 -->
   <el-icon class="icon" @click="goBack"><Back /></el-icon>
-  <!-- <learn-card :topic="topic" @next="nextTopic"></learn-card> -->
+  <learn-card :topic="topic" @next="nextTopic"></learn-card>
   <!-- 答题结束时显示的弹窗 -->
-  <!-- <learn-end-dialog></learn-end-dialog> -->
-  <characters-big-look></characters-big-look>
-
+  <learn-end-dialog></learn-end-dialog>
+  <!-- <characters-big-look></characters-big-look> -->
 </template>
 
 <script lang="ts" setup name="unitLearn">
@@ -28,15 +27,19 @@ interface TopicType {
   answer: string;
   options: Array<string>;
 }
+// errorTopics
 import { unitInfoHomeData, learnInfoHomeData } from "@/store/home";
+import { unitData } from "@/store/unit";
 import { storeToRefs } from "pinia";
 const router = useRouter();
-const unitInfoHome = unitInfoHomeData();
-const learnInfoHome = learnInfoHomeData();
+const unitInfoHome = unitInfoHomeData(); // 在home页中的unit数据
+const learnInfoHome = learnInfoHomeData(); // 在home页中的学习信息数据
+const unitDataUnit = unitData(); // 在单元页的单元数据
 const { unitInfo } = storeToRefs(unitInfoHome);
 const { learnConfig } = storeToRefs(learnInfoHome) as {
   learnConfig: Ref<LearnConfigType>;
 };
+const { endDialog, errorTopics } = storeToRefs(unitDataUnit); // 当前状态是否为错题重学
 const unitInfoClone: Ref<UnitInfoType> = ref({
   characters: [], // 需要学习的文字数组
   model: {
@@ -46,7 +49,7 @@ const unitInfoClone: Ref<UnitInfoType> = ref({
 });
 const topic: Ref<TopicType> = ref({
   index: 0, // 当前题目对应的题号，例：1、2、3...
-  count: 0, // 本单元的题目数量
+  count: 0, // 本次学习的题目的数量
   type: "", // 当前题目的类型
   answer: "", // 当前题目对应的答案
   options: [], // 若当前题类型为选择，则需要对该属性赋值
@@ -58,45 +61,25 @@ function initData() {
   unitInfoClone.value.characters = JSON.parse(
     JSON.stringify(unitInfo.value.characters)
   ); // 获取选择单元的数据
-  // unitInfoClone.value.characters = [
-  //   "冖",
-  //   "讠",
-  //   "凵",
-  //   "卩",
-  //   "阝",
-  //   "刀",
-  //   "力",
-  //   "又",
-  //   "厶",
-  //   "廴",
-  //   "干",
-  //   "艹",
-  //   "屮",
-  //   "彳",
-  //   "巛",
-  //   "川",
-  //   "辶",
-  //   "寸",
-  //   "大",
-  //   "飞",
-  //   "彑",
-  //   "工",
-  //   "弓",
-  //   "廾",
-  //   "广",
-  // ];
   unitInfoClone.value.model = {
     types: [],
     options: [],
-  }; //
-  initQuestionData();
-  // 赋值题目
-  topic.value.index = 0;
-  topic.value.count = unitInfoClone.value.characters.length;
-  topic.value.type = unitInfoClone.value.model.types[0];
-  topic.value.answer = unitInfoClone.value.characters[0];
-  topic.value.options = unitInfoClone.value.model.options[0];
+  }; // 初始化每道题的数据
+  initQuestionData(); // 设置每道题的类型，若类型为选择题则再设置选项
+  // 判断此时是否为错题重
+  console.log("是否为错题重学！", errorTopics.value);
+  // 非错题重学
+  if (!errorTopics.value.relearn) {
+    topic.value.count = unitInfoClone.value.characters.length;
+    nextTopic(0);
+  } else {
+    topic.value.count = errorTopics.value.errIndexs.length;
+    nextTopic(errorTopics.value.errIndexs[0]);
+  }
+  // topic.value.index--; // 因为调用了nextTopic会造成index++
 }
+// 题目赋值
+function setTopic() {}
 // 构造题目数据
 function initQuestionData() {
   switch (learnConfig.value.model) {
@@ -156,11 +139,15 @@ function getUniqueRandomCharacters(sourceArray: Array<string>, count: number) {
 /**
  * 下一道题目
  */
-function nextTopic() {
-  topic.value.index++;
-  topic.value.type = unitInfoClone.value.model.types[topic.value.index];
-  topic.value.answer = unitInfoClone.value.characters[topic.value.index];
-  topic.value.options = unitInfoClone.value.model.options[topic.value.index];
+function nextTopic(index: number) {
+  // endDialog.value = topic.value.index === topic.value.count; // 判断这道题是不是最后一题
+  endDialog.value = topic.value.index === 1; // 判断这道题是不是最后一题
+  if (!endDialog.value) {
+    // topic.value.index++;
+    topic.value.type = unitInfoClone.value.model.types[index];
+    topic.value.answer = unitInfoClone.value.characters[index];
+    topic.value.options = unitInfoClone.value.model.options[index];
+  }
 }
 /**
  * 返回上一级

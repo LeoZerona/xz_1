@@ -110,22 +110,13 @@
       </div>
     </div>
   </el-card>
-  <name-slot-dialog :dialogFlog="endDialog" title="完成">
-    <template #content>
-      <div>恭喜你完成本次学习！</div>
-    </template>
-    <template #footer>
-      <el-button @click="endDialog = false">取消</el-button>
-      <el-button type="primary" @click="backTopicBank">确认</el-button>
-    </template>
-  </name-slot-dialog>
 </template>
 
 <script lang="ts" setup name="unitCard">
-import { unitData } from "@/store/unit.ts";
+import { unitData } from "@/store/unit";
 import { storeToRefs } from "pinia";
 const unit = unitData();
-const { endDialog } = storeToRefs(unit);
+const { endDialog, errorTopics } = storeToRefs(unit);
 interface TopicType {
   index: number;
   count: number;
@@ -141,16 +132,16 @@ const { topic } = defineProps({
     // 如果需要默认值可以在这里添加 default: () => ({ /* 默认对象 */ })
   },
 });
-const emit = defineEmits(["next"]);
+const emit = defineEmits(["next"]); // 调用父组件方法
 const format = (percentage: number) =>
-  percentage === 100 ? "Full" : `${topic.index}/${topic.count}`;
+  percentage === 100 ? "Full" : `${topic.index}/${topic.count}`; // 进度条文字状态
 const customColors = [
   { color: "#9DD3A8", percentage: 20 },
   { color: "#F7D794", percentage: 40 },
   { color: "#FFAB91", percentage: 60 },
   { color: "#6A82FB", percentage: 80 },
   { color: "#78E08F", percentage: 100 },
-];
+]; // 进度条颜色
 const correct: Ref<boolean | null> = ref(null);
 const blankAnswer: Ref<string> = ref("");
 const tipStyle = reactive({
@@ -169,7 +160,10 @@ const searchBoxValue: Ref<any> = ref({
   inputTip: "请输入汉字进行查询",
   key: "", // 查询的关键字
 });
-onMounted(() => {});
+onMounted(() => {
+  console.log('看看题目：', topic);
+  
+});
 // 监听correct
 watchEffect(() => {
   console.log("correct changed:", correct.value);
@@ -186,20 +180,34 @@ watchEffect(() => {
     };
     tipStyle.head.text = "可惜";
   }
-  searchBoxValue.value.visiable = false
+  searchBoxValue.value.visiable = false;
 });
 function initData() {
   correct.value = null;
   blankAnswer.value = "";
 }
 function judge(select: string) {
-  topic.answer === select ? (correct.value = true) : (correct.value = false);
+  const arr: Array<number> = errorTopics.value.errIndexs;
+  if (topic.answer === select) {
+    correct.value = true;
+  } else {
+    correct.value = false;
+    arr.push(topic.index);
+  }
 }
 function next() {
   initData();
   // 赋值进度条
   percentage.value = Math.floor((topic.index / topic.count) * 100);
-  topic.index === topic.count - 1 ? (endDialog.value = true) : emit("next");
+  // endDialog.value = topic.index === topic.count - 1; // 判断这道题是不是最后一题
+  // if (!endDialog.value) {
+  //   // 如果这道题不是最后一题，则获取下一次的题号
+
+  // }
+  const nextIndex = errorTopics.value.relearn
+      ? errorTopics.value.errIndexs[topic.index++]
+      : topic.index++; // 若当前是错题重学的状态，则从数组中获取题号，若当前是正常学习的状态，则使用当前的题号+1
+    emit("next", nextIndex);
 }
 function backTopicBank() {
   endDialog.value = false;

@@ -1,8 +1,17 @@
 import { defineStore } from "pinia";
-export const unitData = defineStore('unit', {
-  state: ()=>{
+export const unitData = defineStore("unit", {
+  state: () => {
     return {
-      endDialog: false
-    }
-  }
-})
+      endDialog: false, // 结束学习弹窗显示的标志
+      errorTopics: {
+        relearn: false, // 学习结束后，是否为错题重学的标志
+        errIndexs: [], // 错字的index标志
+      },
+    };
+  },
+  actions: {
+    setErrorTopicErrIndexs(newValue: any, state: any) {
+      this.errorTopics.errIndexs = newValue;
+    },
+  },
+});
