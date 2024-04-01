@@ -205,8 +205,8 @@ function next() {
 
   // }
   const nextIndex = errorTopics.value.relearn
-      ? errorTopics.value.errIndexs[topic.index++]
-      : topic.index++; // 若当前是错题重学的状态，则从数组中获取题号，若当前是正常学习的状态，则使用当前的题号+1
+      ? errorTopics.value.errIndexs[++topic.index]
+      : ++topic.index; // 若当前是错题重学的状态，则从数组中获取题号，若当前是正常学习的状态，则使用当前的题号+1
     emit("next", nextIndex);
 }
 function backTopicBank() {
