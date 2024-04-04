@@ -306,8 +306,19 @@ watchEffect(() => {
   }
 });
 
+//
+// watch(overviewDialogValue.value.searchKey, () => {
+//   if (
+//     unitInfo.value.charactersList &&
+//     unitInfo.value.charactersList.length > 0
+//   ) {
+//     overviewDialogValue.value.characters =
+//       unitInfo.value.charactersListClone.filter((itme: any) => {
+//         return itme.characters.includes(overviewDialogValue.value.searchKey);
+//       });
+//   }
+// }); // 内容概览上方搜索框
 watchEffect(() => {
-  console.log("emmm", overviewDialogValue.value.searchKey);
   if (
     unitInfo.value.charactersList &&
     unitInfo.value.charactersList.length > 0
@@ -318,7 +329,6 @@ watchEffect(() => {
       });
   }
 });
-// 内容概览上方搜索框
 
 // 监听滚动条所在的区域，对左侧激活区域进行切换
 const debouncedHandleScroll = _.throttle(() => {

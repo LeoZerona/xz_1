@@ -64,10 +64,11 @@ function initData() {
   unitInfoClone.value.model = {
     types: [],
     options: [],
-  }; // 初始化每道题的数据
+  };
+  errorTopics.value.errIndexs = []; // 初始化错题下标数组
   initQuestionData(); // 设置每道题的类型，若类型为选择题则再设置选项
   // 判断此时是否为错题重
-  console.log("是否为错题重学！", errorTopics.value);
+  // console.log("是否为错题重学！", errorTopics.value);
   // 非错题重学
   if (!errorTopics.value.relearn) {
     topic.value.count = unitInfoClone.value.characters.length;
@@ -76,10 +77,7 @@ function initData() {
     topic.value.count = errorTopics.value.errIndexs.length;
     nextTopic(errorTopics.value.errIndexs[0]);
   }
-  // topic.value.index--; // 因为调用了nextTopic会造成index++
 }
-// 题目赋值
-function setTopic() {}
 // 构造题目数据
 function initQuestionData() {
   switch (learnConfig.value.model) {
@@ -140,12 +138,9 @@ function getUniqueRandomCharacters(sourceArray: Array<string>, count: number) {
  * 下一道题目
  */
 function nextTopic(index: number) {
-  console.log('题号：', topic.value.index)
-  endDialog.value = topic.value.index === topic.value.count; // 判断这道题是不是最后一题
-  // endDialog.value = topic.value.index === 1; // 判断这道题是不是最后一题
+  // endDialog.value = topic.value.index === topic.value.count; // 判断这道题是不是最后一题
+  endDialog.value = topic.value.index === 3; // 判断这道题是不是最后一题
   if (!endDialog.value) {
-    // topic.value.index++;
-    console.log('=====',unitInfoClone.value.characters[index], unitInfoClone.value.characters);
     topic.value.answer = unitInfoClone.value.characters[index];
     topic.value.type = unitInfoClone.value.model.types[index];
     topic.value.answer = unitInfoClone.value.characters[index];

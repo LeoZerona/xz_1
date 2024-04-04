@@ -114,6 +114,7 @@
 
 <script lang="ts" setup name="unitCard">
 import { unitData } from "@/store/unit";
+import { number } from "echarts";
 import { storeToRefs } from "pinia";
 const unit = unitData();
 const { endDialog, errorTopics } = storeToRefs(unit);
@@ -161,53 +162,61 @@ const searchBoxValue: Ref<any> = ref({
   key: "", // 查询的关键字
 });
 onMounted(() => {
-  console.log('看看题目：', topic);
-  
+  console.log("看看题目：", topic);
 });
 // 监听correct
-watchEffect(() => {
-  console.log("correct changed:", correct.value);
-  if (correct.value) {
+// watch(correct, () => {
+//   console.log("correct changed:", correct.value);
+//   if (correct.value) {
+//     tipStyle.icon = "CircleCheckFilled";
+//     tipStyle.style = {
+//       color: "#92d436",
+//     };
+//     tipStyle.head.text = "太棒了！";
+//   } else {
+//     tipStyle.icon = "CircleCloseFilled";
+//     tipStyle.style = {
+//       color: "#d74746",
+//     };
+//     errorTopics.value.errIndexs.push(topic.index - 1);
+//     tipStyle.head.text = "可惜";
+//     // console.log("答错题啦！", topic.index, errorTopics.value.errIndexs);
+//   }
+//   searchBoxValue.value.visiable = false;
+// });
+// watchEffect();
+function initData() {
+  correct.value = null;
+  blankAnswer.value = "";
+}
+function judge(select: string) {
+  if (topic.answer === select) {
+    correct.value = true;
     tipStyle.icon = "CircleCheckFilled";
     tipStyle.style = {
       color: "#92d436",
     };
     tipStyle.head.text = "太棒了！";
   } else {
+    correct.value = false;
     tipStyle.icon = "CircleCloseFilled";
     tipStyle.style = {
       color: "#d74746",
     };
     tipStyle.head.text = "可惜";
+    console.log('题号：', topic.index);
+    errorTopics.value.errIndexs.push(topic.index)
   }
-  searchBoxValue.value.visiable = false;
-});
-function initData() {
-  correct.value = null;
-  blankAnswer.value = "";
-}
-function judge(select: string) {
-  const arr: Array<number> = errorTopics.value.errIndexs;
-  if (topic.answer === select) {
-    correct.value = true;
-  } else {
-    correct.value = false;
-    arr.push(topic.index);
-  }
+    searchBoxValue.value.visiable = false;
 }
 function next() {
   initData();
   // 赋值进度条
   percentage.value = Math.floor((topic.index / topic.count) * 100);
-  // endDialog.value = topic.index === topic.count - 1; // 判断这道题是不是最后一题
-  // if (!endDialog.value) {
-  //   // 如果这道题不是最后一题，则获取下一次的题号
-
-  // }
   const nextIndex = errorTopics.value.relearn
-      ? errorTopics.value.errIndexs[++topic.index]
-      : ++topic.index; // 若当前是错题重学的状态，则从数组中获取题号，若当前是正常学习的状态，则使用当前的题号+1
-    emit("next", nextIndex);
+    ? errorTopics.value.errIndexs[++topic.index]
+    : ++topic.index; // 若当前是错题重学的状态，则从数组中获取题号，若当前是正常学习的状态，则使用当前的题号+1
+  emit("next", nextIndex);
 }
 function backTopicBank() {
   endDialog.value = false;

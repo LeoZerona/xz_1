@@ -45,8 +45,4 @@ const { dialogFlog } = defineProps({
     default: ()=>{}
   }
 });
-// 监听方法
-watchEffect(() => {
-  console.log("unitInfo changed:", dialogFlog);
-});
 </script>

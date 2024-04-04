@@ -84,9 +84,7 @@ function judge(select: string) {
 }
 function next(){
   console.log('下一题！');
-  initData()
-  // 初始化所有的值
-  // 使父组件更新值
+  initData()  // 初始化所有的值,使父组件更新值
 }
 </script>
 <style lang="scss" scoped>
