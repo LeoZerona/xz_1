@@ -69,7 +69,6 @@ const unitInfoHome = unitInfoHomeData();
 const { unitInfo } = storeToRefs(unitInfoHome);
 // 在单元学习中产生的学习信息
 import { unitData } from "@/store/unit";
-import func from "../../../vue-temp/vue-editor-bridge";
 const unit = unitData();
 const { endDialog, errorTopics } = storeToRefs(unit);
 
