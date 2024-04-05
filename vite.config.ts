@@ -15,7 +15,7 @@ import { AntDesignVueResolver } from "unplugin-vue-components/resolvers";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  publicPath: process.env.NODE_ENV === "production" ? "/my-app/" : "/",
+  publicPath: process.env.NODE_ENV === "production" ? "/xz_1" : "/",
   plugins: [
     vue(),
     VueSetupExtend(),

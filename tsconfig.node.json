@@ -18,5 +18,5 @@
     "src/**/*.tsx",
     "src/**/*.vue",
     "Element-puls.d.ts" // 添加这行
-  ]
+, "src/main.ts"  ]
 }
