@@ -149,8 +149,8 @@ function getUniqueRandomCharacters(sourceArray: Array<string>, count: number) {
  * 下一道题目
  */
 function nextTopic(index: number) {
-  // endDialog.value = topic.value.index === topic.value.count; // 判断这道题是不是最后一题
-  endDialog.value = topic.value.index === 3; // 判断这道题是不是最后一题
+  endDialog.value = topic.value.index === topic.value.count; // 判断这道题是不是最后一题
+  // endDialog.value = topic.value.index === 3; // 判断这道题是不是最后一题
   if (!endDialog.value) {
     topic.value.answer = unitInfoClone.value.characters[index];
     topic.value.type = unitInfoClone.value.model.types[index];

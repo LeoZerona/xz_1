@@ -77,8 +77,8 @@ const emit = defineEmits(["showBigCharactersPanel"]); // 调用父组件方法
 const dialogConfig: Ref<any> = ref({
   width: 700, // 弹窗宽度
   appendToBody: true, // Dialog 自身是否插入至 body 元素上。
-  closeOnClickModal: true, // 是否支持点击空白处关闭弹窗
-  closeOnPressEscape: true, // 是否支持通过按下ESC关闭弹窗
+  closeOnClickModal: false, // 是否支持点击空白处关闭弹窗
+  closeOnPressEscape: false, // 是否支持通过按下ESC关闭弹窗
   showClose: true, // 是否显示关闭按钮
 });
 const topicListObj = reactive({
