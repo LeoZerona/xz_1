@@ -3,8 +3,14 @@
   <el-icon class="icon" @click="goBack"><Back /></el-icon>
   <learn-card :topic="topic" @next="nextTopic"></learn-card>
   <!-- 答题结束时显示的弹窗 -->
-  <learn-end-dialog></learn-end-dialog>
-  <!-- <characters-big-look></characters-big-look> -->
+  <learn-end-dialog
+    @showBigCharactersPanel="switchBigCharactersPanel"
+  ></learn-end-dialog>
+  <characters-big-look
+    :overlayShow="bigCharacterPanel.show"
+    :characters="bigCharacterPanel.characters"
+    @hideBigCharactersPanel="switchBigCharactersPanel"
+  ></characters-big-look>
 </template>
 
 <script lang="ts" setup name="unitLearn">
@@ -54,9 +60,14 @@ const topic: Ref<TopicType> = ref({
   answer: "", // 当前题目对应的答案
   options: [], // 若当前题类型为选择，则需要对该属性赋值
 });
+const bigCharacterPanel = reactive({
+  show: false,
+  characters: "篆",
+});
 onMounted(() => {
   initData();
 });
+// 数据初始化
 function initData() {
   unitInfoClone.value.characters = JSON.parse(
     JSON.stringify(unitInfo.value.characters)
@@ -123,7 +134,7 @@ function initQuestionData() {
       break;
   }
 }
-// 定义一个函数来获取不重复的随机字符
+// 定义一个函数来获取不重复的随机字符，用于构造选择题的数值
 function getUniqueRandomCharacters(sourceArray: Array<string>, count: number) {
   const uniqueCharacters = new Set(); // 使用Set来存储唯一的字符
   while (uniqueCharacters.size < count) {
@@ -146,6 +157,14 @@ function nextTopic(index: number) {
     topic.value.answer = unitInfoClone.value.characters[index];
     topic.value.options = unitInfoClone.value.model.options[index];
   }
+}
+/**
+ * 显示大字屏
+ */
+function switchBigCharactersPanel(characters: string) {
+  console.log('emmmm', characters);
+  bigCharacterPanel.characters = characters;
+  bigCharacterPanel.show = !bigCharacterPanel.show;
 }
 /**
  * 返回上一级

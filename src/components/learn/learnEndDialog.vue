@@ -1,7 +1,11 @@
 <template>
   <!-- <characters-big-look></characters-big-look> -->
   <!-- 学习结束之后的弹窗 -->
-  <name-slot-dialog :dialogFlog="endDialog" :dialogConfig="dialogConfig">
+  <name-slot-dialog
+    :dialogFlog="endDialog"
+    :dialogConfig="dialogConfig"
+    :beforeCloseFn="dialogClose"
+  >
     <template #header>恭喜你！完成答题</template>
     <template #content>
       <div id="chart" style="width: 666px; height: 270px"></div>
@@ -16,6 +20,7 @@
               v-for="(obj, index) in topicListObj[item.arrName]"
               :key="index"
               class="topic"
+              @click="lookBig(unitInfo.characters[index])"
               :style="textColor(item, obj)"
             >
               <div class="xz">
@@ -48,9 +53,9 @@
       </el-tabs>
     </template>
     <template #footer>
-      <el-button>再学一遍</el-button>
-      <el-button>错题重练</el-button>
-      <el-button>回到目录</el-button>
+      <el-button @click="learnAgain">再学一遍</el-button>
+      <el-button @click="errReLearn">错题重练</el-button>
+      <el-button @click="backCatalog">回到目录</el-button>
     </template>
   </name-slot-dialog>
 </template>
@@ -58,18 +63,18 @@
 <script setup lang="ts">
 import * as echarts from "echarts";
 import { storeToRefs } from "pinia";
-
 // 选择的单元信息
 import { unitInfoHomeData } from "@/store/home";
 const unitInfoHome = unitInfoHomeData();
 const { unitInfo } = storeToRefs(unitInfoHome);
-
 // 在单元学习中产生的学习信息
 import { unitData } from "@/store/unit";
-import { Item } from "ant-design-vue/es/menu";
+import func from "../../../vue-temp/vue-editor-bridge";
 const unit = unitData();
 const { endDialog, errorTopics } = storeToRefs(unit);
 
+const router = useRouter();
+const emit = defineEmits(["showBigCharactersPanel"]); // 调用父组件方法
 const dialogConfig: Ref<any> = ref({
   width: 700, // 弹窗宽度
   appendToBody: true, // Dialog 自身是否插入至 body 元素上。
@@ -118,7 +123,7 @@ watch(endDialog, (newVal: boolean) => {
         data1 = [topicListObj.correct.length, topicListObj.error.length];
         console.log("图表都出不来的呀！", data1);
 
-        bbbb();
+        constructChat();
         const myChart = echarts.init(chartDom);
         option && myChart.setOption(option);
       } else {
@@ -141,18 +146,16 @@ function textColor(item: any, flag: number) {
       style.color = "#F56C6C";
       break;
   }
-  console.log("晕倒，又", item);
   return style;
 }
 let color = ["#409eff", "#ff4343"];
 let names = ["正确", "错误"];
-// topicListObj.correct.length, topicListObj.error.length
-let data1 = reactive([13, 12]);
+let data1 = reactive([0, 0]);
 let list: Array<any> = [];
 let total = 0;
 let option: any = {};
 
-function bbbb() {
+function constructChat() {
   for (let i in data1) {
     total += data1[i];
   }
@@ -352,6 +355,28 @@ function bbbb() {
       },
     ],
   };
+}
+function lookBig(characters: string) {
+  emit("showBigCharactersPanel", characters);
+}
+function learnAgain() {
+  errorTopics.value.relearn = false;
+  errorTopics.value.errIndexs = [];
+  endDialog.value = false; // 关闭学习结束弹窗
+  router.replace("./unit_learn");
+}
+function errReLearn() {
+  errorTopics.value.relearn = true;
+  endDialog.value = false; // 关闭学习结束弹窗
+  router.replace("./unit_learn");
+}
+function dialogClose() {
+  endDialog.value = false; // 关闭学习结束弹窗
+  router.replace("./topic_bank");
+}
+function backCatalog() {
+  endDialog.value = false; // 关闭学习结束弹窗
+  router.replace("./topic_bank");
 }
 </script>
 

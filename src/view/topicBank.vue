@@ -25,7 +25,7 @@
       </div>
     </div>
     <div class="right">
-      <div class="btn" @click="aaa">
+      <div class="btn" @click="searchBoxShow">
         <el-icon><Search /></el-icon>
       </div>
     </div>
@@ -63,7 +63,7 @@
   <name-slot-dialog
     :dialogFlog="overviewDialogValue.dialogVisiable"
     :dialogConfig="overviewSearchDialogConfig"
-    :beforeCloseFn="dialogBeforeClose"
+    :beforeCloseFn="dialogClose"
     class="learn-content-dialog"
   >
     <template #header> 内容概览 </template>
@@ -418,12 +418,11 @@ function backTop() {
   }
   requestAnimationFrame(scrollStep); // 开始动画
 }
-function aaa() {
-  console.log("aaaa");
+function searchBoxShow() {
   searchValue.value.searchDrawerFlog = true;
 }
 /** 关闭单元详情的方法 */
-function dialogBeforeClose() {
+function dialogClose() {
   overviewDialogValue.value.dialogVisiable = false;
 }
 /** 右侧搜索抽屉关闭方法 */

@@ -40,7 +40,7 @@ const { answer } = defineProps({
     default: () => (['文', '字', '小', '转'])
   }
 })
-// `${percentage}%`
+
 const format = (percentage: number) => (percentage === 100 ? 'Full' : '5/25')
 const customColors = [
   { color: '#f56c6c', percentage: 20 },
