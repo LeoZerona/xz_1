@@ -194,6 +194,7 @@ import { unitInfoHomeData, learnInfoHomeData } from "@/store/home";
 import { storeToRefs } from "pinia";
 import { Search } from "@element-plus/icons-vue";
 import func from "../../vue-temp/vue-editor-bridge";
+import { AnyAaaaRecord } from "dns";
 interface PartType {
   name: string;
 }
@@ -251,7 +252,8 @@ const drawerConfig: Ref<drawerConfigType> = ref({
   closeOnPressEscape: false,
   showClose: false,
 });
-const overviewDialogValue: Ref<overviewDialogValueType> = ref({
+
+const overviewDialogValue: Ref<overviewDialogValueType> = reactive({
   dialogVisiable: false,
   searchKeyLength: 5,
   searchKey: "",
@@ -288,47 +290,37 @@ watchEffect(() => {
   !searchValue.value.searchDrawerFlog ? (searchValue.value.searchKey = "") : "";
 });
 /** 内容预览小窗赋值 */
-watchEffect(() => {
-  if (unitInfo.value.characters) {
-    overviewDialogValue.value.charactersList = [];
-    // 内容概览下方内容数据初始化
-    unitInfo.value.characters.forEach((item: string) => {
-      const obj = {
-        index: overviewDialogValue.value.charactersList.length,
-        characters: item,
-        show: false,
-      };
-      overviewDialogValue.value.charactersList.push(obj);
-    });
-    overviewDialogValue.value.charactersListClone = JSON.parse(
-      JSON.stringify(overviewDialogValue.value.charactersList)
-    );
-  }
-});
-
-//
-// watch(overviewDialogValue.value.searchKey, () => {
-//   if (
-//     unitInfo.value.charactersList &&
-//     unitInfo.value.charactersList.length > 0
-//   ) {
-//     overviewDialogValue.value.characters =
-//       unitInfo.value.charactersListClone.filter((itme: any) => {
-//         return itme.characters.includes(overviewDialogValue.value.searchKey);
-//       });
-//   }
-// }); // 内容概览上方搜索框
-watchEffect(() => {
-  if (
-    unitInfo.value.charactersList &&
-    unitInfo.value.charactersList.length > 0
-  ) {
-    overviewDialogValue.value.characters =
-      unitInfo.value.charactersListClone.filter((itme: any) => {
-        return itme.characters.includes(overviewDialogValue.value.searchKey);
+watch(
+  () => unitInfo.value.characters,
+  (newValue: string, oldValue: string) => {
+    if (unitInfo.value.characters) {
+      overviewDialogValue.charactersList = [];
+      // 内容概览下方内容数据初始化
+      unitInfo.value.characters.forEach((item: string) => {
+        const obj = {
+          index: overviewDialogValue.charactersList.length,
+          characters: item,
+          show: false,
+        };
+        overviewDialogValue.charactersList.push(obj);
       });
+      overviewDialogValue.charactersListClone = JSON.parse(
+        JSON.stringify(overviewDialogValue.charactersList)
+      );
+    }
   }
-});
+);
+
+watch(
+  () => overviewDialogValue.searchKey,
+  (newValue: string, oldValue: string) => {
+    overviewDialogValue.charactersList =
+      overviewDialogValue.charactersListClone.filter((item) => {
+        return item.characters.includes(newValue);
+      });
+    console.log("什么垃圾东东?", overviewDialogValue.charactersList, newValue);
+  }
+);
 
 // 监听滚动条所在的区域，对左侧激活区域进行切换
 const debouncedHandleScroll = _.throttle(() => {
@@ -423,7 +415,7 @@ function searchBoxShow() {
 }
 /** 关闭单元详情的方法 */
 function dialogClose() {
-  overviewDialogValue.value.dialogVisiable = false;
+  overviewDialogValue.dialogVisiable = false;
 }
 /** 右侧搜索抽屉关闭方法 */
 function searchDrawerBeforeClose() {
@@ -432,15 +424,15 @@ function searchDrawerBeforeClose() {
 /** 概览窗口显示模式切换 */
 function overviewModelChange(value: any) {
   console.log("遮挡模式切换：", value);
-  overviewDialogValue.value.displayMode = value;
-  overviewDialogValue.value.charactersList.forEach((item: any) => {
+  overviewDialogValue.displayMode = value;
+  overviewDialogValue.charactersList.forEach((item: any) => {
     item.show = false;
   });
 }
 /** 切换显示模式 */
 function switchShow(index: number) {
-  overviewDialogValue.value.charactersList[index].show =
-    !overviewDialogValue.value.charactersList[index].show;
+  overviewDialogValue.charactersList[index].show =
+    !overviewDialogValue.charactersList[index].show;
 }
 </script>
 

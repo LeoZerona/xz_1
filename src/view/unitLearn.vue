@@ -162,7 +162,6 @@ function nextTopic(index: number) {
  * 显示大字屏
  */
 function switchBigCharactersPanel(characters: string) {
-  console.log('emmmm', characters);
   bigCharacterPanel.characters = characters;
   bigCharacterPanel.show = !bigCharacterPanel.show;
 }

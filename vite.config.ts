@@ -14,8 +14,8 @@ import { ElementPlusResolver } from "unplugin-vue-components/resolvers";
 import { AntDesignVueResolver } from "unplugin-vue-components/resolvers";
 
 // https://vitejs.dev/config/
+// base: "/xz_1/",
 export default defineConfig({
-  base: "/xz_1/",
   publicPath: process.env.NODE_ENV === "production" ? "/xz_1" : "/",
   plugins: [
     vue(),

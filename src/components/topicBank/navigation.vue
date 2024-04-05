@@ -88,6 +88,12 @@ function searchCharacters() {}
 function langSwitch() {
   console.log("语言方法更改！");
 }
+/**
+ * 切换菜单
+ */
+function handleSelect(){
+
+}
 </script>
 
 <style lang="scss">
