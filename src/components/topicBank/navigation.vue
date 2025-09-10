@@ -40,7 +40,6 @@
 </template>
 
 <script setup lang="ts" name="navigation">
-import { Search } from "@element-plus/icons-vue";
 const router = useRouter();
 const lang: Ref<boolean> = ref(false);
 const menuActiveIndex: Ref<string> = ref("0");

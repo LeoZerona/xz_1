@@ -193,7 +193,6 @@ import { textInfo } from "@/static/text_res";
 import { unitInfoHomeData, learnInfoHomeData } from "@/store/home";
 import { storeToRefs } from "pinia";
 import { Search } from "@element-plus/icons-vue";
-import func from "../../vue-temp/vue-editor-bridge";
 interface PartType {
   name: string;
 }

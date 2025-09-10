@@ -29,6 +29,12 @@ let routes = [
     name: "unitLearn",
     component: () => import("@/view/unitLearn.vue"),
   },
+  // 对照阅读页
+  {
+    path: "/reference_read",
+    name: "referenceRead",
+    component: () => import("@/view/referenceRead.vue"),
+  },
   //{
   //配置404页面
   //path: '/:catchAll(.*)',
