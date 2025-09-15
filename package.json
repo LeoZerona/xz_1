@@ -23,7 +23,8 @@
     "lodash": "^4.17.21",
     "pinia": "^2.1.7",
     "vue": "^3.4.19",
-    "vue-router": "^4.2.5"
+    "vue-router": "^4.2.5",
+    "yarn": "^1.22.22"
   },
   "devDependencies": {
     "@types/node": "^20.11.19",

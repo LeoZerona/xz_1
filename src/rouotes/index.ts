@@ -35,6 +35,12 @@ let routes = [
     name: "referenceRead",
     component: () => import("@/view/referenceRead.vue"),
   },
+  // 特效页面
+  {
+    path: "/special_effects",
+    name: "referespecialEffectsnceRead",
+    component: () => import("@/view/referespecialEffectsnceRead.vue"),
+  },
   //{
   //配置404页面
   //path: '/:catchAll(.*)',
