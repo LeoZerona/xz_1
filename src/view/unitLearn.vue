@@ -149,12 +149,20 @@ function getUniqueRandomCharacters(sourceArray: Array<string>, count: number) {
  * 下一道题目
  */
 function nextTopic(index: number) {
-  endDialog.value = topic.value.index === topic.value.count; // 判断这道题是不是最后一题
-  // endDialog.value = topic.value.index === 3; // 判断这道题是不是最后一题
+  // 更新当前题目索引
+  if (errorTopics.value.relearn) {
+    // 错题重学模式：找到当前题目在错题数组中的位置
+    const currentIndexInArray = errorTopics.value.errIndexs.indexOf(index);
+    topic.value.index = currentIndexInArray + 1; // 从1开始计数
+  } else {
+    // 正常模式：直接使用传入的索引+1
+    topic.value.index = index + 1;
+  }
+  
+  endDialog.value = topic.value.index > topic.value.count; // 判断这道题是不是最后一题
   if (!endDialog.value) {
     topic.value.answer = unitInfoClone.value.characters[index];
     topic.value.type = unitInfoClone.value.model.types[index];
-    topic.value.answer = unitInfoClone.value.characters[index];
     topic.value.options = unitInfoClone.value.model.options[index];
   }
 }
@@ -162,7 +170,6 @@ function nextTopic(index: number) {
  * 显示大字屏
  */
 function switchBigCharactersPanel(characters: string) {
-  console.log('emmmm', characters);
   bigCharacterPanel.characters = characters;
   bigCharacterPanel.show = !bigCharacterPanel.show;
 }
@@ -179,5 +186,27 @@ function goBack() {
   font-size: 25px;
   margin: 12px;
   cursor: pointer;
+  z-index: 100;
+  position: relative;
+  transition: transform 0.2s;
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .icon {
+    font-size: 22px;
+    margin: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .icon {
+    font-size: 20px;
+    margin: 8px;
+  }
 }
 </style>

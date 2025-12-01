@@ -6,10 +6,13 @@
   "scripts": {
     "dev": "vite",
     "preview": "vite preview",
-    "build": "vite build",
+    "build": "vite build && node scripts/copy-404.js && node scripts/check-build.js",
+    "build:gh-pages": "vite build --base=/xz_1/ && node scripts/copy-404.js && node scripts/check-build.js && node scripts/verify-deploy.js",
     "typecheck": "vue-tsc",
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist -r https://github.com/LeoZerona/xz_1.git -b gh-pages"
+    "diagnose": "node scripts/diagnose.js",
+    "verify": "node scripts/verify-deploy.js",
+    "deploy": "npm run build:gh-pages && gh-pages -d dist",
+    "deploy:custom": "npm run build && gh-pages -d dist"
   },
   "dependencies": {
     "@ant-design/icons-vue": "^7.0.1",

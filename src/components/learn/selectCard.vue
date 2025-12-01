@@ -61,7 +61,6 @@ const tipStyle = reactive({
 })
 // 监听correct
 watchEffect(() => {
-  console.log('correct changed:', correct.value);
   if(correct.value){
     tipStyle.icon = 'CircleCheckFilled'
     tipStyle.style = {
@@ -83,7 +82,6 @@ function judge(select: string) {
   answer === select ? correct.value = true : correct.value = false;
 }
 function next(){
-  console.log('下一题！');
   initData()  // 初始化所有的值,使父组件更新值
 }
 </script>

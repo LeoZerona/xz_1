@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>重定向中...</title>
+    <script>
+      // GitHub Pages 404 重定向
+      // 获取当前路径
+      const path = window.location.pathname;
+      // 获取仓库名（假设是 /xz_1/）
+      const repoName = '/xz_1/';
+      
+      // 如果路径不包含仓库名，添加仓库名
+      if (!path.startsWith(repoName) && path !== '/') {
+        window.location.href = repoName + path.replace(/^\//, '');
+      } else {
+        // 否则重定向到 index.html
+        window.location.href = repoName + 'index.html';
+      }
+    </script>
+  </head>
+  <body>
+    <p>正在重定向...</p>
+  </body>
+</html>
+

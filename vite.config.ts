@@ -16,6 +16,13 @@ import {AntDesignVueResolver} from "unplugin-vue-components/resolvers"
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  // 配置 base 路径，如果是 GitHub Pages，使用仓库名作为 base
+  // 例如：如果仓库名是 xz_1，则 base: '/xz_1/'
+  // 如果是自定义域名，则 base: '/'
+  // 开发环境始终使用 '/'，生产环境使用环境变量或默认 '/'
+  base: process.env.NODE_ENV === 'production' 
+    ? (process.env.VITE_BASE_PATH || '/') 
+    : '/',
   plugins: [
     vue(),
 		VueSetupExtend(),
@@ -45,18 +52,30 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        // 匹配请求路径，
-        target: "你要代理的地址", // 代理的目标地址
+        // 匹配请求路径
+        // TODO: 请配置实际的后端服务地址
+        target: "http://localhost:3000", // 代理的目标地址
         // 开发模式，默认的127.0.0.1,开启后代理服务会把origin修改为目标地址
         changeOrigin: true,
         // secure: true, // 是否https接口
         // ws: true, // 是否代理websockets
 
-        // 路径重写，**** 如果你的后端有统一前缀(如:/api)，就不开启；没有就开启
-        //简单来说，就是是否改路径 加某些东西
+        // 路径重写，如果你的后端有统一前缀(如:/api)，就不开启；没有就开启
+        // 简单来说，就是是否改路径 加某些东西
         rewrite: (path) => path.replace(/^\/api/, ""),
       },
     },
   },
-  publicPath:'.',
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+    // 生产环境移除 console
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+      },
+    },
+  },
 });

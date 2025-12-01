@@ -10,7 +10,7 @@ export const unitData = defineStore("unit", {
     };
   },
   actions: {
-    setErrorTopicErrIndexs(newValue: any, state: any) {
+    setErrorTopicErrIndexs(newValue: number[]) {
       this.errorTopics.errIndexs = newValue;
     },
   },

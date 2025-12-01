@@ -22,4 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-node_modules
+
+# GitHub Pages
+# 注意：.github 目录需要提交，所以不忽略

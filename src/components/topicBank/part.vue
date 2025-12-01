@@ -2,55 +2,61 @@
   <div class="part">
     <div class="title">{{ data.label }}</div>
     <el-row :gutter="20">
-      <el-col v-for="(item, index) in processedData" :key="index" :span="8">
-        <unit :key="index" :data="item" @click="unitSelect(item)"></unit>
+      <el-col 
+        v-for="(item, index) in processedData" 
+        :key="index" 
+        :xs="24" 
+        :sm="12" 
+        :md="8"
+      >
+        <unit-card :data="item" @click="(data) => unitSelect(data)" />
       </el-col>
     </el-row>
   </div>
 </template>
 
-<script setup lang="ts" name="part">
-import { unitInfoHomeData } from '@/store/home'
-import { storeToRefs } from 'pinia';
-type stageType = {
-  name: string,
-  text: string
-}
+<script setup lang="ts" name="Part">
+import { unitInfoHomeData } from '@/store/home';
+import UnitCard from './UnitCard.vue';
 
-type dataType = {
-  label: string,
-  icon: string,
-  type: string,
-  stage: stageType[]
-}
-// const { data } = defineProps<{ data: { type: dataType, required: true } }>()
-const { data } = defineProps({
-  data:{
-    type: Object as PropType<dataType>,
-      require: true
-  }
-})
-const unitInfoHome = unitInfoHomeData()
-const processedData = ref([])
+type StageType = {
+  name: string;
+  text: string;
+  type?: string;
+  characters?: string[];
+};
+
+type DataType = {
+  label: string;
+  icon: string;
+  type: string;
+  stage: StageType[];
+};
+
+const props = defineProps<{
+  data: DataType;
+}>();
+
+const unitInfoHome = unitInfoHomeData();
+const processedData = ref<StageType[]>([]);
 
 onMounted(async () => {
-  const processedStageInfo = data.stage.map((item, index) => {
-    item.name = `${data.label}（${index + 1}/${data.stage.length}）`
-    item.type = data.type
-    item.characters = item.text.split(' ')
-    return item
-  })
+  const processedStageInfo = props.data.stage.map((item, index) => {
+    return {
+      ...item,
+      name: `${props.data.label}（${index + 1}/${props.data.stage.length}）`,
+      type: props.data.type,
+      characters: item.text.split(' ').filter(Boolean),
+    };
+  });
 
-  // 使用nextTick等待下一个DOM更新周期
-  await new Promise((resolve: any) => {
-    nextTick(resolve)
-  })
+  await nextTick();
+  processedData.value = processedStageInfo;
+});
 
-  processedData.value = processedStageInfo
-})
-function unitSelect(data: any) {
-  unitInfoHome.setunitInfo(data)  // 设置用户选择的单元信息
-  unitInfoHome.setUnitInfoDialogFlog(true)  // 显示单元信息弹窗
+function unitSelect(data: StageType) {
+  unitInfoHome.setunitInfo(data);
+  unitInfoHome.setUnitInfoDialogFlog(true);
 }
 </script>
 
@@ -79,6 +85,53 @@ function unitSelect(data: any) {
 
   .unit-list {
     display: flex;
+  }
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .part {
+    padding: 8px;
+
+    .title {
+      font-size: 20px;
+      height: 30px;
+      margin-bottom: 8px;
+    }
+
+    .title::after {
+      top: 28px;
+    }
+
+    :deep(.el-row) {
+      margin: 0 !important;
+    }
+
+    :deep(.el-col) {
+      padding: 0 5px !important;
+      margin-bottom: 8px;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .part {
+    padding: 5px;
+
+    .title {
+      font-size: 18px;
+      height: 28px;
+      margin-bottom: 6px;
+    }
+
+    .title::after {
+      top: 26px;
+    }
+
+    :deep(.el-col) {
+      padding: 0 3px !important;
+      margin-bottom: 6px;
+    }
   }
 }
 </style>

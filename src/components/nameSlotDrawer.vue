@@ -47,4 +47,29 @@ const { drawerVisiable } = defineProps({
   }
 });
 </script>
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+/* 移动端适配 */
+@media (max-width: 768px) {
+  :deep(.el-drawer) {
+    width: 85% !important;
+  }
+
+  :deep(.el-drawer__body) {
+    padding: 15px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  :deep(.el-drawer) {
+    width: 90% !important;
+  }
+
+  :deep(.el-drawer__header) {
+    padding: 15px 15px 10px !important;
+  }
+
+  :deep(.el-drawer__body) {
+    padding: 12px !important;
+  }
+}
+</style>

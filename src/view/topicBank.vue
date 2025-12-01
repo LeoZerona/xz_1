@@ -150,41 +150,12 @@
       </el-scrollbar>
     </template>
   </name-slot-dialog>
-  <!-- 抽屉面板 -->
-  <name-slot-drawer
+  <!-- 字典查询抽屉 -->
+  <dictionary-drawer
+    :visible="searchValue.searchDrawerFlog"
     :drawer-config="drawerConfig"
-    :drawer-visiable="searchValue.searchDrawerFlog"
-    :before-close-fn="searchDrawerBeforeClose"
-    class="search-drawer"
-  >
-    <template #header>
-      <span>字典查询</span>
-    </template>
-    <template #content>
-      <el-input
-        v-model="searchValue.searchKey"
-        maxlength="10"
-        :placeholder="searchValue.searchTip"
-        show-word-limit
-        type="text"
-        class="search-input"
-      />
-      <div class="search-result">
-        <div class="result">
-          简：
-          <div class="jt">{{ searchValue.searchKey }}</div>
-        </div>
-        <div class="result">
-          繁：
-          <div class="ft">{{ searchValue.searchKey }}</div>
-        </div>
-        <div class="result">
-          篆：
-          <div class="xz">{{ searchValue.searchKey }}</div>
-        </div>
-      </div>
-    </template>
-  </name-slot-drawer>
+    @close="searchDrawerBeforeClose"
+  />
 </template>
 
 <script setup lang="ts" name="home">
@@ -193,6 +164,7 @@ import { textInfo } from "@/static/text_res";
 import { unitInfoHomeData, learnInfoHomeData } from "@/store/home";
 import { storeToRefs } from "pinia";
 import { Search } from "@element-plus/icons-vue";
+import DictionaryDrawer from "@/components/common/DictionaryDrawer.vue";
 interface PartType {
   name: string;
 }
@@ -243,13 +215,29 @@ const searchValue: Ref<searchValueType> = ref({
   searchTip: "请输入文字查询小篆",
   searchDrawerFlog: false,
 });
-const drawerConfig: Ref<drawerConfigType> = ref({
-  size: "30%",
+const isMobile = ref(false);
+
+const checkMobile = () => {
+  isMobile.value = window.innerWidth <= 768;
+};
+
+onMounted(() => {
+  checkMobile();
+  window.addEventListener('resize', checkMobile);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', checkMobile);
+  window.removeEventListener('scroll', debouncedHandleScroll);
+});
+
+const drawerConfig = computed<drawerConfigType>(() => ({
+  size: isMobile.value ? "85%" : "30%",
   direction: "rtl",
   closeOnClickModal: true,
   closeOnPressEscape: false,
   showClose: false,
-});
+}));
 const overviewDialogValue: Ref<overviewDialogValueType> = ref({
   dialogVisiable: false,
   searchKeyLength: 5,
@@ -274,13 +262,13 @@ const overviewDialogValue: Ref<overviewDialogValueType> = ref({
   charactersList: [],
   charactersListClone: [],
 });
-const overviewSearchDialogConfig: Ref<any> = ref({
-  width: 500, // 弹窗宽度
+const overviewSearchDialogConfig = computed(() => ({
+  width: isMobile.value ? "90%" : 500, // 弹窗宽度
   appendToBody: true, // Dialog 自身是否插入至 body 元素上。
   closeOnClickModal: true, // 是否支持点击空白处关闭弹窗
   closeOnPressEscape: true, // 是否支持通过按下ESC关闭弹窗
   showClose: true, // 是否显示关闭按钮
-});
+}));
 onMounted(() => {});
 /** 搜索抽屉面板是否显示 */
 watchEffect(() => {
@@ -429,8 +417,7 @@ function searchDrawerBeforeClose() {
   searchValue.value.searchDrawerFlog = false;
 }
 /** 概览窗口显示模式切换 */
-function overviewModelChange(value: any) {
-  console.log("遮挡模式切换：", value);
+function overviewModelChange(value: string) {
   overviewDialogValue.value.displayMode = value;
   overviewDialogValue.value.charactersList.forEach((item: any) => {
     item.show = false;
@@ -556,27 +543,258 @@ function switchShow(index: number) {
     }
   }
 }
-.search-drawer {
-  .search-input {
-    width: 360px;
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .contain {
+    flex-direction: column;
+    padding-bottom: 80px; // 为固定按钮留出空间
+
+    .left {
+      width: 100%;
+      margin: 1% 0 0 0;
+      padding: 0 10px;
+
+      .step-bar {
+        position: relative;
+        top: auto;
+        left: auto;
+        height: auto;
+        max-width: 100%;
+        margin: 20px 0;
+        padding: 10px;
+        background-color: #f5f6f7;
+        border-radius: 8px;
+
+        :deep(.el-steps) {
+          flex-direction: row;
+          overflow-x: auto;
+          padding-bottom: 10px;
+          -webkit-overflow-scrolling: touch;
+        }
+
+        :deep(.el-step) {
+          flex-shrink: 0;
+          min-width: 80px;
+        }
+
+        :deep(.el-step__title) {
+          font-size: 12px;
+          padding-right: 8px;
+        }
+
+        .icon-top {
+          position: fixed;
+          bottom: 20px;
+          right: 20px;
+          top: auto;
+          left: auto;
+          z-index: 100;
+          width: 40px;
+          height: 40px;
+          font-size: 20px;
+          padding: 8px;
+          background-color: #fff;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+      }
+    }
+
+    .right {
+      width: 100%;
+      margin: 10px 0;
+
+      .btn {
+        position: fixed;
+        bottom: 70px;
+        right: 20px;
+        top: auto;
+        z-index: 100;
+        width: 50px;
+        height: 50px;
+        padding: 12px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #409eff;
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(64, 158, 255, 0.4);
+        border: none;
+
+        &:hover {
+          background-color: #66b1ff;
+          box-shadow: 0 6px 16px rgba(64, 158, 255, 0.5);
+        }
+
+        &:active {
+          transform: scale(0.95);
+        }
+      }
+    }
   }
-  .search-result {
-    margin-top: 30px;
-    .result {
-      margin-top: 10px;
+
+  .unit-dialog {
+    :deep(.el-dialog) {
+      width: 90% !important;
+      max-width: 450px !important;
     }
-    .jt,
-    .ft,
-    .xz {
-      font-size: 50px;
-      font-weight: 700;
-      margin-top: 10px;
+
+    .content {
+      .name {
+        font-size: 18px;
+      }
+
+      .learn-content {
+        font-size: 14px;
+      }
+
+      .num {
+        font-size: 14px;
+      }
     }
-    .ft {
-      font-family: "HanYiKaiTiFan";
+  }
+
+  .learn-content-dialog {
+    :deep(.el-dialog) {
+      width: 90% !important;
+      max-width: 450px !important;
+      margin: 5vh auto !important;
     }
-    .xz {
-      font-family: "FangZhengXiaoZhuan";
+
+    .overview {
+      font-size: 14px;
+      word-break: break-all;
+      line-height: 1.6;
+    }
+
+    .search-tool {
+      flex-direction: column;
+      gap: 10px;
+
+      .input-box {
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: 0;
+      }
+
+      .model-sel {
+        width: 100%;
+      }
+    }
+
+    :deep(.el-scrollbar) {
+      max-height: 300px !important;
+    }
+
+    .character-unit {
+      margin-bottom: 12px;
+
+      .xz {
+        width: 50px;
+        height: 50px;
+        font-size: 50px;
+        margin-bottom: 8px;
+      }
+
+      .answer {
+        font-size: 24px;
+        padding: 8px;
+        width: 100%;
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .contain {
+    padding-bottom: 70px;
+
+    .left {
+      padding: 0 5px;
+
+      .step-bar {
+        margin: 15px 0;
+        padding: 8px;
+
+        :deep(.el-step) {
+          min-width: 70px;
+        }
+
+        :deep(.el-step__title) {
+          font-size: 11px;
+          padding-right: 5px;
+        }
+
+        .icon-top {
+          bottom: 15px;
+          right: 15px;
+          width: 36px;
+          height: 36px;
+          font-size: 18px;
+          padding: 6px;
+        }
+      }
+    }
+
+    .right {
+      .btn {
+        bottom: 60px;
+        right: 15px;
+        width: 45px;
+        height: 45px;
+        padding: 10px;
+        font-size: 18px;
+      }
+    }
+  }
+
+  .unit-dialog {
+    :deep(.el-dialog) {
+      width: 95% !important;
+    }
+
+    .content {
+      .name {
+        font-size: 16px;
+      }
+
+      .learn-content {
+        font-size: 13px;
+      }
+
+      .num {
+        font-size: 13px;
+      }
+
+      :deep(.el-radio-group) {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+    }
+  }
+
+  .learn-content-dialog {
+    :deep(.el-dialog) {
+      width: 95% !important;
+    }
+
+    .overview {
+      font-size: 13px;
+    }
+
+    .character-unit {
+      .xz {
+        width: 40px;
+        height: 40px;
+        font-size: 40px;
+      }
+
+      .answer {
+        font-size: 20px;
+        height: 25px;
+      }
     }
   }
 }

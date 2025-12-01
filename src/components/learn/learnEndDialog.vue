@@ -20,32 +20,13 @@
               v-for="(obj, index) in topicListObj[item.arrName]"
               :key="index"
               class="topic"
-              @click="lookBig(unitInfo.characters[index])"
+              @click="lookBig(getCharacter(item, obj, index))"
               :style="textColor(item, obj)"
             >
-              <div class="xz">
-                {{
-                  item.arrName === "all"
-                    ? unitInfo.characters[index]
-                    : unitInfo.characters[obj]
-                }}
-              </div>
-              |
-              <div class="ft">
-                {{
-                  item.arrName === "all"
-                    ? unitInfo.characters[index]
-                    : unitInfo.characters[obj]
-                }}
-              </div>
-              |
-              <div class="jt">
-                {{
-                  item.arrName === "all"
-                    ? unitInfo.characters[index]
-                    : unitInfo.characters[obj]
-                }}
-              </div>
+              <character-display
+                :character="getCharacter(item, obj, index)"
+                size="medium"
+              />
             </div>
           </el-scrollbar>
         </el-tab-pane>
@@ -63,6 +44,7 @@
 <script setup lang="ts">
 import * as echarts from "echarts";
 import { storeToRefs } from "pinia";
+import CharacterDisplay from "@/components/common/CharacterDisplay.vue";
 // 选择的单元信息
 import { unitInfoHomeData } from "@/store/home";
 const unitInfoHome = unitInfoHomeData();
@@ -100,37 +82,62 @@ const panels = [
     arrName: "error", // 与topicListObj中的数组对应
   },
 ];
+let myChartInstance: echarts.ECharts | null = null;
+
 onMounted(() => {});
-// 监听 myValue 的变化
+
+// 监听 endDialog 的变化
 watch(endDialog, (newVal: boolean) => {
   if (newVal) {
-    topicListObj.error = errorTopics.value.errIndexs;
+    topicListObj.error = [...errorTopics.value.errIndexs];
     topicListObj.all = new Array(unitInfo.value.characters.length)
       .fill(0)
       .map((val, index) => (topicListObj.error.includes(index) ? 1 : 0)); // 赋值全部数组值，错题为1，正确为0
-    console.log("全部数组值结果：", topicListObj);
+    
     topicListObj.correct = Array.from(
       { length: unitInfo.value.characters.length },
       (_, index) => index
     );
     topicListObj.correct = topicListObj.correct.filter(
-      (item: Number) => !topicListObj.error.includes(Number(item))
+      (item: number) => !topicListObj.error.includes(item)
     );
+    
     nextTick(() => {
       const chartDom = document.getElementById("chart");
       if (chartDom) {
-        data1 = [topicListObj.correct.length, topicListObj.error.length];
-        console.log("图表都出不来的呀！", data1);
-
+        data1[0] = topicListObj.correct.length;
+        data1[1] = topicListObj.error.length;
         constructChat();
-        const myChart = echarts.init(chartDom);
-        option && myChart.setOption(option);
-      } else {
-        console.error('找不到 ID 为 "chart" 的元素');
+        
+        // 如果图表实例已存在，先销毁
+        if (myChartInstance) {
+          myChartInstance.dispose();
+        }
+        
+        myChartInstance = echarts.init(chartDom);
+        if (option && Object.keys(option).length > 0) {
+          myChartInstance.setOption(option);
+        }
       }
     });
   }
 });
+
+onBeforeUnmount(() => {
+  // 清理图表实例
+  if (myChartInstance) {
+    myChartInstance.dispose();
+    myChartInstance = null;
+  }
+});
+
+function getCharacter(item: any, obj: any, index: number): string {
+  if (item.arrName === "all") {
+    return unitInfo.value.characters[index];
+  } else {
+    return unitInfo.value.characters[obj];
+  }
+}
 
 function textColor(item: any, flag: number) {
   const style = { color: "#67C23A" };
@@ -147,16 +154,23 @@ function textColor(item: any, flag: number) {
   }
   return style;
 }
-let color = ["#409eff", "#ff4343"];
-let names = ["正确", "错误"];
-let data1 = reactive([0, 0]);
-let list: Array<any> = [];
-let total = 0;
+const color = ["#409eff", "#ff4343"];
+const data1 = reactive([0, 0]);
 let option: any = {};
 
 function constructChat() {
-  for (let i in data1) {
+  // 重置变量
+  const list: Array<any> = [];
+  let total = 0;
+  
+  // 计算总数
+  for (let i = 0; i < data1.length; i++) {
     total += data1[i];
+  }
+  
+  if (total === 0) {
+    option = {};
+    return; // 如果没有数据，不构建图表
   }
 
   let placeHolderStyle = {
@@ -389,18 +403,8 @@ function backCatalog() {
     padding: 5px;
     cursor: pointer;
     margin-bottom: 10px;
-    .xz,
-    .ft,
-    .jt {
-      margin: 0 5px;
-      font-weight: 700;
-    }
-    .xz {
-      font-family: "FangZhengXiaoZhuan";
-    }
-    .ft {
-      font-family: "HanYiKaiTiFan";
-    }
+    align-items: center;
+    justify-content: center;
   }
 }
 
@@ -412,5 +416,55 @@ function backCatalog() {
   height: 100%;
   background-color: rgba(0, 0, 0, 0.5); /* 半透明灰色背景 */
   z-index: 9999;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  :deep(.el-dialog) {
+    width: 90% !important;
+    max-width: 500px !important;
+    margin: 5vh auto !important;
+  }
+
+  #chart {
+    width: 100% !important;
+    height: 200px !important;
+  }
+
+  .topic-border {
+    :deep(.el-tabs__content) {
+      padding: 10px;
+    }
+
+    .topic {
+      font-size: 20px;
+      padding: 8px;
+      margin-bottom: 8px;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  :deep(.el-dialog) {
+    width: 95% !important;
+    margin: 3vh auto !important;
+  }
+
+  #chart {
+    height: 180px !important;
+  }
+
+  .topic-border {
+    .topic {
+      font-size: 18px;
+      padding: 6px;
+      margin-bottom: 6px;
+    }
+  }
+
+  :deep(.el-button) {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
 }
 </style>

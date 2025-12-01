@@ -46,3 +46,37 @@ const { dialogFlog } = defineProps({
   }
 });
 </script>
+
+<style lang="scss" scoped>
+/* 移动端适配 */
+@media (max-width: 768px) {
+  :deep(.el-dialog) {
+    width: 90% !important;
+    max-width: 500px !important;
+    margin: 5vh auto !important;
+  }
+
+  :deep(.el-dialog__body) {
+    padding: 15px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  :deep(.el-dialog) {
+    width: 95% !important;
+    margin: 3vh auto !important;
+  }
+
+  :deep(.el-dialog__header) {
+    padding: 15px 15px 10px !important;
+  }
+
+  :deep(.el-dialog__body) {
+    padding: 12px !important;
+  }
+
+  :deep(.el-dialog__footer) {
+    padding: 10px 15px !important;
+  }
+}
+</style>

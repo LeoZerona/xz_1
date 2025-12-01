@@ -10,7 +10,7 @@ import App from "./App.vue";
 // pinia
 import { createPinia } from 'pinia'
 //routes
-import router from "./rouotes/index";
+import router from "./routes/index";
 
 const app = createApp(App);
 const pinia = createPinia()

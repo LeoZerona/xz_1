@@ -33,10 +33,17 @@ onMounted(async () => {
   window.addEventListener('resize', update) 
   try {
     const res  = await fetch('/article.txt')   // 相对于站点根
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`)
+    }
     const data = await res.text()
     text.value = data.trim()                   // 去掉末尾换行
   } catch (e) {
-    console.error('读取 article.txt 失败', e)
+    // 静默处理错误，避免在控制台输出过多错误信息
+    if (import.meta.env.DEV) {
+      console.error('读取 article.txt 失败', e)
+    }
+    text.value = '文件加载失败，请稍后重试'
   }
 })
 

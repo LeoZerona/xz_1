@@ -41,6 +41,11 @@ let routes = [
     name: "referespecialEffectsnceRead",
     component: () => import("@/view/referespecialEffectsnceRead.vue"),
   },
+  {
+    path: '/text_page',
+    name: 'testPage',
+    component: () => import("@/view/testPage.vue")
+  }
   //{
   //配置404页面
   //path: '/:catchAll(.*)',
@@ -49,9 +54,12 @@ let routes = [
   //}
 ];
 // 路由
+// 如果部署到 GitHub Pages 子路径，需要配置 base
+const base = import.meta.env.BASE_URL || '/';
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory(base),
   routes,
 });
 // 导出
 export default router;
+
