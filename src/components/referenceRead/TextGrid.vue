@@ -1,5 +1,5 @@
 <template>
-  <ul ref="wrapEl" class="rice-ul" @copy="handleCopy">
+  <ul ref="wrapEl" class="rice-ul" :class="{ 'grid-none': gridType === 'none' }" @copy="handleCopy">
     <li
       v-for="(ch, i) in textArr"
       :key="i"
@@ -23,6 +23,7 @@
         :grid-type="gridType"
         :show-pinyin="false"
         :cell-size="cellSize"
+        :is-lower="true"
         class="cell lower"
         :data-char="ch"
         :data-char-index="i"
@@ -79,7 +80,8 @@ const perRow = computed(() => Math.max(1, Math.floor(wrapW.value / unit.value)))
 const textArr = computed(() => Array.from(props.text))
 
 // CSS 变量计算
-const gapPx = computed(() => `${props.gap}px`)
+// 无格模式下，左右无间隙
+const gapPx = computed(() => props.gridType === 'none' ? '0px' : `${props.gap}px`)
 const cellSizePx = computed(() => `${props.cellSize}px`)
 
 const isHighlighted = (index: number) => {
@@ -204,5 +206,10 @@ defineExpose({
 }
 
 /* 稿纸样式由 PaperGrid 组件处理 */
+
+/* 无格模式：左右无间隙 */
+.rice-ul.grid-none {
+  gap: 0;
+}
 </style>
 

@@ -13,8 +13,11 @@
         :value="article.id"
       >
         <div class="article-option">
-          <span class="title">{{ article.title }}</span>
-          <span v-if="article.author" class="author">{{ article.author }}</span>
+          <div class="article-info">
+            <span class="title">{{ article.title }}</span>
+            <span v-if="article.author" class="author">{{ article.author }}</span>
+          </div>
+          <span v-if="article.category" class="category">{{ article.category }}</span>
         </div>
       </el-option>
     </el-select>
@@ -61,14 +64,30 @@ const handleArticleChange = (articleId: string) => {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    width: 100%;
 
-    .title {
-      font-weight: 600;
+    .article-info {
+      display: flex;
+      align-items: center;
+      flex: 1;
+
+      .title {
+        font-weight: 600;
+      }
+
+      .author {
+        font-size: 12px;
+        color: #909399;
+        margin-left: 10px;
+      }
     }
 
-    .author {
-      font-size: 12px;
-      color: #909399;
+    .category {
+      font-size: 11px;
+      color: #409eff;
+      background-color: #ecf5ff;
+      padding: 2px 8px;
+      border-radius: 4px;
       margin-left: 10px;
     }
   }

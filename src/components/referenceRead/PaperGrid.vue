@@ -1,7 +1,7 @@
 <template>
   <div 
     class="paper-grid" 
-    :class="[gridType, { 'with-pinyin': showPinyin }]"
+    :class="[gridType, { 'with-pinyin': showPinyin, 'is-lower': isLower }]"
     :style="gridStyle"
   >
     <!-- 拼音区域（上方）- 始终显示，即使没有拼音 -->
@@ -24,6 +24,7 @@ interface Props {
   showPinyin?: boolean; // 是否显示拼音
   pinyin?: string; // 拼音内容
   cellSize?: number; // 格子大小（汉字区域的高度）
+  isLower?: boolean; // 是否为下层格子（字体B）
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -31,6 +32,7 @@ const props = withDefaults(defineProps<Props>(), {
   showPinyin: false,
   pinyin: '',
   cellSize: 69,
+  isLower: false,
 });
 
 const gridStyle = computed(() => {
@@ -188,9 +190,12 @@ const gridStyle = computed(() => {
     }
   }
 
-  /* 无格样式 - 立体边框效果 */
+  /* 无格样式 - 左右无间隙，上下边框合并 */
   &.none {
     border: none; // 无外边框
+    margin: 0; // 移除负边距，让格子紧密排列
+    border-left: none; // 无左边框
+    border-right: none; // 无右边框
     
     .pinyin-section {
       border-bottom: 1px solid #d3d3d3;
@@ -220,18 +225,24 @@ const gridStyle = computed(() => {
     }
     
     .character-section {
-      // 立体边框效果 - 顶部和底部有浅灰色线条形成凹陷效果
-      border-top: 1px solid #e0e0e0;
-      border-bottom: 1px solid #e0e0e0;
-      box-shadow: 
-        inset 0 1px 0 rgba(0, 0, 0, 0.05), // 顶部内阴影
-        inset 0 -1px 0 rgba(0, 0, 0, 0.05); // 底部内阴影
+      // 顶部边框：用于分隔不同行的格子（上层格子有，下层格子无）
+      border-top: 1px solid #d3d3d3;
+      // 底部边框：用于与下层格子（字体B）合并成一条线
+      border-bottom: 1px solid #d3d3d3;
+      border-left: none; // 无左边框
+      border-right: none; // 无右边框
       
       // 移除所有格子线条
       &::before,
       &::after {
         display: none;
       }
+    }
+    
+    // 下层格子（字体B）：移除顶部边框，让上层格子的底部边框与之合并成一条线
+    &.is-lower .character-section {
+      border-top: none; // 移除顶部边框，与上层格子的底部边框合并
+      margin-top: -1px; // 负边距让边框重叠，合并成一条线
     }
   }
 
