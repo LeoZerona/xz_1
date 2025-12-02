@@ -16,12 +16,24 @@ let routes = [
     name: "home",
     component: homeComponent,
   },
-  // 单元选择页
+  // 题库页
   {
     path: "/topic_bank",
     name: "topicBank",
     //使用import可以路由懒加载，如果不使用，太多组件一起加载会造成白屏
     component: () => import("@/view/topicBank.vue"),
+  },
+  // 词语页
+  {
+    path: "/words",
+    name: "words",
+    component: () => import("@/view/words.vue"),
+  },
+  // 古诗文页
+  {
+    path: "/poetry",
+    name: "poetry",
+    component: () => import("@/view/poetry.vue"),
   },
   // 单元学习页
   {

@@ -67,16 +67,26 @@ watch(() => props.type, () => {
     display: flex;
     flex-direction: column;
     gap: 15px;
+    align-items: stretch;
 
     .option-btn {
+      width: 100%;
       height: 64px;
       font-size: 20px;
       box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
       transition: all 0.3s;
+      margin: 0;
+      padding: 0 20px;
+      text-align: center;
+      justify-content: center;
 
       &:hover {
         transform: translateY(-2px);
         box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.3);
+      }
+
+      &:first-child {
+        margin-top: 0;
       }
     }
   }
@@ -105,10 +115,24 @@ watch(() => props.type, () => {
     .options {
       margin-top: 15px;
       gap: 12px;
+      align-items: stretch;
 
       .option-btn {
         height: 56px;
         font-size: 18px;
+        width: 100%;
+        margin: 0;
+        padding: 0 15px;
+        -webkit-tap-highlight-color: transparent;
+
+        &:active {
+          transform: translateY(0);
+          box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        &:first-child {
+          margin-top: 0;
+        }
       }
     }
 
@@ -119,11 +143,22 @@ watch(() => props.type, () => {
       .input-box {
         height: 48px;
         line-height: 48px;
+
+        :deep(.el-input__inner) {
+          font-size: 16px;
+          padding: 0 15px;
+        }
       }
 
       .confirm-btn {
         height: 48px;
         font-size: 15px;
+        width: 100%;
+        -webkit-tap-highlight-color: transparent;
+
+        &:active {
+          transform: scale(0.98);
+        }
       }
     }
   }
@@ -134,10 +169,19 @@ watch(() => props.type, () => {
     .options {
       margin-top: 12px;
       gap: 10px;
+      align-items: stretch;
 
       .option-btn {
         height: 50px;
         font-size: 16px;
+        width: 100%;
+        margin: 0;
+        padding: 0 15px;
+        text-align: center;
+
+        &:first-child {
+          margin-top: 0;
+        }
       }
     }
 
@@ -148,11 +192,57 @@ watch(() => props.type, () => {
       .input-box {
         height: 44px;
         line-height: 44px;
+
+        :deep(.el-input__inner) {
+          font-size: 15px;
+          padding: 0 12px;
+        }
       }
 
       .confirm-btn {
         height: 44px;
         font-size: 14px;
+      }
+    }
+  }
+}
+
+@media (max-width: 360px) {
+  .question-card {
+    .options {
+      gap: 8px;
+      align-items: stretch;
+
+      .option-btn {
+        height: 46px;
+        font-size: 15px;
+        width: 100%;
+        margin: 0;
+        padding: 0 12px;
+        text-align: center;
+
+        &:first-child {
+          margin-top: 0;
+        }
+      }
+    }
+
+    .fill-blank {
+      margin-top: 20px;
+      gap: 8px;
+
+      .input-box {
+        height: 42px;
+        line-height: 42px;
+
+        :deep(.el-input__inner) {
+          font-size: 14px;
+        }
+      }
+
+      .confirm-btn {
+        height: 42px;
+        font-size: 13px;
       }
     }
   }

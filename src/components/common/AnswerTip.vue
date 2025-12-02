@@ -138,6 +138,8 @@ const handleConfirm = () => {
 /* 移动端适配 */
 @media (max-width: 768px) {
   .answer-tip {
+    padding: 12px 15px;
+
     .head {
       height: 28px;
       line-height: 28px;
@@ -164,19 +166,28 @@ const handleConfirm = () => {
         margin-top: 8px;
         font-size: 18px;
         gap: 8px;
+        flex-wrap: wrap;
+        justify-content: center;
       }
     }
 
     .btn {
-      margin-top: 8px;
+      margin-top: 12px;
       height: 48px;
       font-size: 15px;
+      -webkit-tap-highlight-color: transparent;
+
+      &:active {
+        transform: scale(0.97);
+      }
     }
   }
 }
 
 @media (max-width: 480px) {
   .answer-tip {
+    padding: 10px 12px;
+
     .head {
       height: 26px;
       line-height: 26px;
@@ -207,9 +218,50 @@ const handleConfirm = () => {
     }
 
     .btn {
-      margin-top: 6px;
+      margin-top: 10px;
       height: 44px;
       font-size: 14px;
+    }
+  }
+}
+
+@media (max-width: 360px) {
+  .answer-tip {
+    padding: 8px 10px;
+
+    .head {
+      height: 24px;
+      line-height: 24px;
+
+      .icon {
+        font-size: 22px;
+      }
+
+      .text {
+        font-size: 22px;
+        margin-left: 5px;
+      }
+    }
+
+    .content {
+      margin-top: 5px;
+
+      .tip-label {
+        font-size: 13px;
+        margin-bottom: 5px;
+      }
+
+      .answer {
+        margin-top: 5px;
+        font-size: 15px;
+        gap: 5px;
+      }
+    }
+
+    .btn {
+      margin-top: 8px;
+      height: 42px;
+      font-size: 13px;
     }
   }
 }

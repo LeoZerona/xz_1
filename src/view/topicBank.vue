@@ -9,8 +9,8 @@
         :id="item.name"
       ></part>
       <!-- 步骤条 -->
-      <div class="step-bar" style="height: 300px; max-width: 600px">
-        <el-steps direction="vertical" :active="partStage">
+      <div class="step-bar" :class="{ 'mobile-step-bar': isMobile }">
+        <el-steps :direction="isMobile ? 'horizontal' : 'vertical'" :active="partStage">
           <el-step
             class="step-bar-item"
             v-for="item in textInfo.part"
@@ -30,7 +30,12 @@
       </div>
     </div>
   </div>
-  <name-slot-dialog :dialogFlog="unitInfoDialogFlog" class="unit-dialog">
+  <name-slot-dialog 
+    :dialogFlog="unitInfoDialogFlog" 
+    @update:dialogFlog="handleUnitDialogClose"
+    :dialogConfig="unitDialogConfig"
+    class="unit-dialog"
+  >
     <template #header> 单元详情 </template>
     <template v-slot:content>
       <div class="content">
@@ -49,7 +54,7 @@
     </template>
 
     <template v-slot:footer>
-      <div class="dialog-footer">
+      <div class="dialog-footer" :class="{ 'mobile-footer': isMobile }">
         <el-button type="primary" @click="learnStart">开始学习</el-button>
         <el-button
           type="primary"
@@ -62,6 +67,7 @@
   </name-slot-dialog>
   <name-slot-dialog
     :dialogFlog="overviewDialogValue.dialogVisiable"
+    @update:dialogFlog="handleOverviewDialogClose"
     :dialogConfig="overviewSearchDialogConfig"
     :beforeCloseFn="dialogClose"
     class="learn-content-dialog"
@@ -94,7 +100,7 @@
           />
         </el-select>
       </div>
-      <el-scrollbar max-height="350px">
+      <el-scrollbar :max-height="isMobile ? '200px' : '350px'">
         <div
           v-for="(item, index) in overviewDialogValue.charactersList"
           :key="index"
@@ -151,8 +157,9 @@
     </template>
   </name-slot-dialog>
   <!-- 字典查询抽屉 -->
-  <dictionary-drawer
+  <font-query
     :visible="searchValue.searchDrawerFlog"
+    mode="drawer"
     :drawer-config="drawerConfig"
     @close="searchDrawerBeforeClose"
   />
@@ -164,7 +171,7 @@ import { textInfo } from "@/static/text_res";
 import { unitInfoHomeData, learnInfoHomeData } from "@/store/home";
 import { storeToRefs } from "pinia";
 import { Search } from "@element-plus/icons-vue";
-import DictionaryDrawer from "@/components/common/DictionaryDrawer.vue";
+import FontQuery from "@/components/business/FontQuery.vue";
 interface PartType {
   name: string;
 }
@@ -262,8 +269,16 @@ const overviewDialogValue: Ref<overviewDialogValueType> = ref({
   charactersList: [],
   charactersListClone: [],
 });
+const unitDialogConfig = computed(() => ({
+  width: isMobile.value ? 320 : 500, // 弹窗宽度
+  appendToBody: true, // Dialog 自身是否插入至 body 元素上。
+  closeOnClickModal: true, // 是否支持点击空白处关闭弹窗
+  closeOnPressEscape: true, // 是否支持通过按下ESC关闭弹窗
+  showClose: true, // 是否显示关闭按钮
+}));
+
 const overviewSearchDialogConfig = computed(() => ({
-  width: isMobile.value ? "90%" : 500, // 弹窗宽度
+  width: isMobile.value ? 320 : 500, // 弹窗宽度
   appendToBody: true, // Dialog 自身是否插入至 body 元素上。
   closeOnClickModal: true, // 是否支持点击空白处关闭弹窗
   closeOnPressEscape: true, // 是否支持通过按下ESC关闭弹窗
@@ -409,6 +424,16 @@ function searchBoxShow() {
   searchValue.value.searchDrawerFlog = true;
 }
 /** 关闭单元详情的方法 */
+function handleUnitDialogClose(value: boolean) {
+  unitInfoHome.setUnitInfoDialogFlog(value);
+}
+
+/** 关闭内容概览对话框的方法 */
+function handleOverviewDialogClose(value: boolean) {
+  overviewDialogValue.value.dialogVisiable = value;
+}
+
+/** 关闭单元详情的方法 */
 function dialogClose() {
   overviewDialogValue.value.dialogVisiable = false;
 }
@@ -433,20 +458,27 @@ function switchShow(index: number) {
 <style lang="scss" scoped>
 .contain {
   display: flex;
+  min-height: 100vh;
+  
   .left {
     width: 55%;
     font-weight: 700;
     margin: 1.5% 0 0 15%;
     border-radius: 10px;
+    
     .step-bar {
       position: fixed;
       top: 25%;
       left: 8%;
+      height: 300px;
+      max-width: 600px;
+      transition: all 0.3s ease;
 
       :deep(.step-bar-item) {
         .el-step__head .is-text,
         .el-step__main .el-step__title {
           cursor: pointer;
+          transition: all 0.2s ease;
         }
 
         .el-step__head.is-finish,
@@ -466,96 +498,15 @@ function switchShow(index: number) {
         border: 1px solid #a8abb2;
         border-radius: 18px;
         padding: 5px;
+        transition: all 0.2s ease;
+        -webkit-tap-highlight-color: transparent;
       }
 
       .icon-top:hover {
-        // border: 1px solid #fff;
         background-color: #fff;
       }
-    }
-  }
-  .right {
-    width: 29%;
-    margin: 1.5% 0 0 1%;
-    .btn {
-      position: fixed;
-      right: 0px;
-      border: 1px solid #fff;
-      font-size: 20px;
-      padding: 10px;
-      border-radius: 10px;
-      cursor: pointer;
-      background-color: #fff;
-      outline: 2px solid rgba(242, 230, 231, 0.5);
-    }
-    .btn:hover {
-      outline: 2px solid rgba(64, 158, 255, 0.5);
-    }
-  }
-}
-.unit-dialog {
-  .content {
-    .name {
-      margin-bottom: 10px;
-    }
 
-    .learn-content {
-      margin-bottom: 10px;
-    }
-  }
-}
-.learn-content-dialog {
-  .overview {
-    font-size: 15px;
-    margin-bottom: 10px;
-  }
-  .search-tool {
-    display: flex;
-    margin: 10px 0;
-    .input-box {
-      width: 350px;
-      margin-right: 10px;
-    }
-    .model-sel {
-      width: 100px;
-    }
-  }
-  .character-unit {
-    margin-bottom: 15px;
-    .xz {
-      width: 60px;
-      height: 60px;
-      border-radius: 10px;
-      margin-bottom: 10px;
-      font-family: "FangZhengXiaoZhuan";
-      font-size: 60px;
-    }
-    .answer {
-      border-radius: 10px;
-      padding-left: 10px;
-      background-color: #e6e9f3;
-      font-size: 30px;
-      width: 97%;
-      height: 30px;
-      .ft {
-        font-family: "HanYiKaiTiFan";
-      }
-    }
-  }
-}
-
-/* 移动端适配 */
-@media (max-width: 768px) {
-  .contain {
-    flex-direction: column;
-    padding-bottom: 80px; // 为固定按钮留出空间
-
-    .left {
-      width: 100%;
-      margin: 1% 0 0 0;
-      padding: 0 10px;
-
-      .step-bar {
+      &.mobile-step-bar {
         position: relative;
         top: auto;
         left: auto;
@@ -571,6 +522,7 @@ function switchShow(index: number) {
           overflow-x: auto;
           padding-bottom: 10px;
           -webkit-overflow-scrolling: touch;
+          scrollbar-width: thin;
         }
 
         :deep(.el-step) {
@@ -596,19 +548,177 @@ function switchShow(index: number) {
           padding: 8px;
           background-color: #fff;
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+          border: none;
         }
       }
+    }
+  }
+  
+  .right {
+    width: 29%;
+    margin: 1.5% 0 0 1%;
+    
+    .btn {
+      position: fixed;
+      right: 0px;
+      border: 1px solid #fff;
+      font-size: 20px;
+      padding: 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      background-color: #fff;
+      outline: 2px solid rgba(242, 230, 231, 0.5);
+      transition: all 0.2s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    .btn:hover {
+      outline: 2px solid rgba(64, 158, 255, 0.5);
+    }
+  }
+}
+.unit-dialog {
+  :deep(.el-dialog) {
+    overflow: hidden;
+  }
+
+  :deep(.el-dialog__body) {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .content {
+    .name {
+      margin-bottom: 10px;
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .learn-content {
+      margin-bottom: 10px;
+      line-height: 1.6;
+      word-break: break-all;
+    }
+
+    .num {
+      margin-bottom: 10px;
+    }
+
+    :deep(.el-radio-group) {
+      margin-top: 8px;
+    }
+  }
+
+  .dialog-footer {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+
+    &.mobile-footer {
+      flex-direction: column;
+      gap: 6px;
+
+      :deep(.el-button) {
+        width: 100%;
+        margin: 0;
+        padding: 8px 15px;
+      }
+    }
+  }
+}
+.learn-content-dialog {
+  :deep(.el-dialog) {
+    overflow: hidden;
+  }
+
+  :deep(.el-dialog__body) {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .overview {
+    font-size: 15px;
+    margin-bottom: 10px;
+    line-height: 1.6;
+    word-break: break-all;
+  }
+  
+  .search-tool {
+    display: flex;
+    margin: 10px 0;
+    gap: 10px;
+    
+    .input-box {
+      width: 350px;
+      flex: 1;
+    }
+    
+    .model-sel {
+      width: 100px;
+      flex-shrink: 0;
+    }
+  }
+  
+  .character-unit {
+    margin-bottom: 15px;
+    
+    .xz {
+      width: 60px;
+      height: 60px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      font-family: "FangZhengXiaoZhuan";
+      font-size: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    .answer {
+      border-radius: 10px;
+      padding: 8px 10px;
+      background-color: #e6e9f3;
+      font-size: 30px;
+      width: 97%;
+      min-height: 30px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s ease;
+      -webkit-tap-highlight-color: transparent;
+      
+      .ft {
+        font-family: "HanYiKaiTiFan";
+      }
+    }
+  }
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .contain {
+    flex-direction: column;
+    padding-bottom: 100px; // 为固定按钮留出空间
+
+    .left {
+      width: 100%;
+      margin: 0;
+      padding: 0 15px;
+      font-size: 14px;
     }
 
     .right {
       width: 100%;
-      margin: 10px 0;
+      margin: 0;
 
       .btn {
         position: fixed;
         bottom: 70px;
         right: 20px;
         top: auto;
+        left: auto;
         z-index: 100;
         width: 50px;
         height: 50px;
@@ -621,6 +731,7 @@ function switchShow(index: number) {
         color: #fff;
         box-shadow: 0 4px 12px rgba(64, 158, 255, 0.4);
         border: none;
+        outline: none;
 
         &:hover {
           background-color: #66b1ff;
@@ -629,6 +740,7 @@ function switchShow(index: number) {
 
         &:active {
           transform: scale(0.95);
+          background-color: #3a8ee6;
         }
       }
     }
@@ -636,71 +748,152 @@ function switchShow(index: number) {
 
   .unit-dialog {
     :deep(.el-dialog) {
-      width: 90% !important;
-      max-width: 450px !important;
+      width: 95% !important;
+      max-width: 320px !important;
+      margin: 2vh auto !important;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    :deep(.el-dialog__header) {
+      padding: 12px 15px 8px !important;
+      flex-shrink: 0;
+    }
+
+    :deep(.el-dialog__body) {
+      padding: 10px 15px !important;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    :deep(.el-dialog__footer) {
+      padding: 8px 15px 12px !important;
+      flex-shrink: 0;
     }
 
     .content {
       .name {
-        font-size: 18px;
+        font-size: 16px;
+        margin-bottom: 8px;
+        font-weight: 600;
       }
 
       .learn-content {
-        font-size: 14px;
+        font-size: 13px;
+        margin-bottom: 8px;
+        line-height: 1.6;
+        word-break: break-all;
       }
 
       .num {
-        font-size: 14px;
+        font-size: 13px;
+        margin-bottom: 8px;
+      }
+
+      > span {
+        font-size: 13px;
+        display: block;
+        margin-bottom: 6px;
+      }
+
+      :deep(.el-radio-group) {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-top: 6px;
+      }
+
+      :deep(.el-radio) {
+        margin-right: 0;
+        font-size: 13px;
+      }
+    }
+
+    .dialog-footer {
+      padding: 0;
+      
+      :deep(.el-button) {
+        padding: 8px 15px;
+        font-size: 13px;
       }
     }
   }
 
   .learn-content-dialog {
     :deep(.el-dialog) {
-      width: 90% !important;
-      max-width: 450px !important;
-      margin: 5vh auto !important;
+      width: 95% !important;
+      max-width: 320px !important;
+      margin: 2vh auto !important;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    :deep(.el-dialog__header) {
+      padding: 12px 15px 8px !important;
+      flex-shrink: 0;
+    }
+
+    :deep(.el-dialog__body) {
+      padding: 10px 15px !important;
+      flex: 1;
+      overflow-y: auto;
     }
 
     .overview {
-      font-size: 14px;
+      font-size: 13px;
       word-break: break-all;
       line-height: 1.6;
+      margin-bottom: 10px;
     }
 
     .search-tool {
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
+      margin: 10px 0;
 
       .input-box {
         width: 100%;
         margin-right: 0;
-        margin-bottom: 0;
+        
+        :deep(.el-input__inner) {
+          font-size: 13px;
+          padding: 8px 12px;
+        }
       }
 
       .model-sel {
         width: 100%;
+        
+        :deep(.el-input__inner) {
+          font-size: 13px;
+          padding: 8px 12px;
+        }
       }
     }
 
     :deep(.el-scrollbar) {
-      max-height: 300px !important;
+      max-height: 200px !important;
     }
 
     .character-unit {
-      margin-bottom: 12px;
+      margin-bottom: 10px;
 
       .xz {
-        width: 50px;
-        height: 50px;
-        font-size: 50px;
-        margin-bottom: 8px;
+        width: 40px;
+        height: 40px;
+        font-size: 40px;
+        margin-bottom: 6px;
+        cursor: pointer;
       }
 
       .answer {
-        font-size: 24px;
-        padding: 8px;
+        font-size: 20px;
+        padding: 6px 8px;
         width: 100%;
+        min-height: 32px;
+        cursor: pointer;
       }
     }
   }
@@ -708,10 +901,11 @@ function switchShow(index: number) {
 
 @media (max-width: 480px) {
   .contain {
-    padding-bottom: 70px;
+    padding-bottom: 90px;
 
     .left {
-      padding: 0 5px;
+      padding: 0 10px;
+      font-size: 13px;
 
       .step-bar {
         margin: 15px 0;
@@ -752,25 +946,59 @@ function switchShow(index: number) {
   .unit-dialog {
     :deep(.el-dialog) {
       width: 95% !important;
+      max-width: 300px !important;
+      margin: 1vh auto !important;
+      max-height: 95vh;
+    }
+
+    :deep(.el-dialog__header) {
+      padding: 10px 12px 6px !important;
+    }
+
+    :deep(.el-dialog__body) {
+      padding: 8px 12px !important;
+    }
+
+    :deep(.el-dialog__footer) {
+      padding: 6px 12px 10px !important;
     }
 
     .content {
       .name {
-        font-size: 16px;
+        font-size: 15px;
+        margin-bottom: 6px;
       }
 
       .learn-content {
-        font-size: 13px;
+        font-size: 12px;
+        margin-bottom: 6px;
+        line-height: 1.6;
       }
 
       .num {
-        font-size: 13px;
+        font-size: 12px;
+        margin-bottom: 6px;
+      }
+
+      > span {
+        font-size: 12px;
+        margin-bottom: 4px;
       }
 
       :deep(.el-radio-group) {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
+        gap: 5px;
+        margin-top: 5px;
+      }
+
+      :deep(.el-radio) {
+        font-size: 12px;
+      }
+    }
+
+    .dialog-footer {
+      :deep(.el-button) {
+        padding: 6px 12px;
+        font-size: 12px;
       }
     }
   }
@@ -778,22 +1006,145 @@ function switchShow(index: number) {
   .learn-content-dialog {
     :deep(.el-dialog) {
       width: 95% !important;
+      max-width: 300px !important;
+      margin: 1vh auto !important;
+      max-height: 95vh;
+    }
+
+    :deep(.el-dialog__header) {
+      padding: 10px 12px 6px !important;
+    }
+
+    :deep(.el-dialog__body) {
+      padding: 8px 12px !important;
     }
 
     .overview {
-      font-size: 13px;
+      font-size: 12px;
+      line-height: 1.6;
+      margin-bottom: 8px;
+    }
+
+    .search-tool {
+      margin: 8px 0;
+      gap: 6px;
+
+      .input-box {
+        :deep(.el-input__inner) {
+          font-size: 12px;
+          padding: 6px 10px;
+        }
+      }
+
+      .model-sel {
+        :deep(.el-input__inner) {
+          font-size: 12px;
+          padding: 6px 10px;
+        }
+      }
+    }
+
+    :deep(.el-scrollbar) {
+      max-height: 180px !important;
     }
 
     .character-unit {
+      margin-bottom: 8px;
+
       .xz {
-        width: 40px;
-        height: 40px;
-        font-size: 40px;
+        width: 35px;
+        height: 35px;
+        font-size: 35px;
+        margin-bottom: 4px;
       }
 
       .answer {
-        font-size: 20px;
-        height: 25px;
+        font-size: 18px;
+        padding: 5px 6px;
+        min-height: 28px;
+      }
+    }
+  }
+}
+
+/* 超小屏幕适配 */
+@media (max-width: 360px) {
+  .contain {
+    .left {
+      padding: 0 8px;
+      font-size: 12px;
+    }
+
+    .right {
+      .btn {
+        width: 42px;
+        height: 42px;
+        bottom: 55px;
+        right: 12px;
+        font-size: 16px;
+      }
+    }
+  }
+
+  .unit-dialog,
+  .learn-content-dialog {
+    :deep(.el-dialog) {
+      width: 98% !important;
+      max-width: 280px !important;
+      margin: 1vh auto !important;
+      max-height: 98vh;
+    }
+
+    :deep(.el-dialog__header) {
+      padding: 8px 10px 5px !important;
+    }
+
+    :deep(.el-dialog__body) {
+      padding: 6px 10px !important;
+    }
+
+    :deep(.el-dialog__footer) {
+      padding: 5px 10px 8px !important;
+    }
+  }
+
+  .learn-content-dialog {
+    :deep(.el-scrollbar) {
+      max-height: 160px !important;
+    }
+  }
+}
+
+/* 触摸设备优化 */
+@media (hover: none) and (pointer: coarse) {
+  .contain {
+    .left {
+      .step-bar {
+        .icon-top {
+          &:active {
+            transform: scale(0.9);
+            background-color: #f0f0f0;
+          }
+        }
+      }
+    }
+
+    .right {
+      .btn {
+        &:active {
+          transform: scale(0.9);
+        }
+      }
+    }
+  }
+
+  .learn-content-dialog {
+    .character-unit {
+      .xz,
+      .answer {
+        &:active {
+          opacity: 0.7;
+        }
       }
     }
   }

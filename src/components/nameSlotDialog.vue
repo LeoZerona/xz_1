@@ -1,12 +1,13 @@
 <template>
   <el-dialog
     :model-value="dialogFlog"
+    @update:model-value="handleUpdate"
     :width="dialogConfig.width"
     :append-to-body="dialogConfig.appendToBody"
     :show-close="dialogConfig.showClose"
     :close-on-click-modal="dialogConfig.closeOnClickModal"
     :close-on-press-escape="dialogConfig.closeOnPressEscape"
-    :before-close="beforeCloseFn"
+    :before-close="handleBeforeClose"
   >
     <template #header>
       <slot name="header"> </slot>
@@ -25,7 +26,7 @@ type dialogConfigType = {
   closeOnPressEscape: boolean;
   showClose: boolean;
 };
-const { dialogFlog } = defineProps({
+const props = defineProps({
   dialogFlog: {
     type: Boolean,
     require: true,
@@ -45,6 +46,21 @@ const { dialogFlog } = defineProps({
     default: ()=>{}
   }
 });
+
+const emit = defineEmits<{
+  'update:dialogFlog': [value: boolean]
+}>();
+
+const handleUpdate = (value: boolean) => {
+  emit('update:dialogFlog', value);
+};
+
+const handleBeforeClose = (done: () => void) => {
+  if (props.beforeCloseFn) {
+    props.beforeCloseFn();
+  }
+  done();
+};
 </script>
 
 <style lang="scss" scoped>

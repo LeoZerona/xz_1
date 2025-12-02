@@ -42,8 +42,9 @@
     />
   </el-card>
   <!-- 字典查询区 -->
-  <dictionary-search
+  <font-query
     :visible="searchVisible"
+    mode="card"
     :card-style="searchCardStyle"
     @close="handleSearchClose"
   />
@@ -52,8 +53,9 @@
 <script lang="ts" setup name="LearnCard">
 import { unitData } from '@/store/unit';
 import { storeToRefs } from 'pinia';
+import { Search } from '@element-plus/icons-vue';
 import CharacterDisplay from './common/CharacterDisplay.vue';
-import DictionarySearch from './common/DictionarySearch.vue';
+import FontQuery from '@/components/business/FontQuery.vue';
 import LearningProgress from './common/LearningProgress.vue';
 import AnswerTip from './common/AnswerTip.vue';
 import QuestionCard from './common/QuestionCard.vue';
@@ -256,25 +258,42 @@ const handleSearchClose = () => {
     width: 90%;
     min-height: auto;
     max-width: 500px;
-    padding: 20px;
-    max-height: 70vh;
+    padding: 20px 15px;
+    max-height: 85vh;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+
+    :deep(.el-card__body) {
+      padding: 15px;
+    }
 
     .learn-card {
       .title {
         font-size: 18px;
         margin-bottom: 15px;
+        text-align: center;
       }
 
       .characters {
         margin-top: 20px;
+        margin-bottom: 15px;
       }
 
       .search-btn {
-        top: 12%;
-        width: 35px;
-        height: 20px;
-        padding: 6px;
+        top: 10%;
+        right: -15px;
+        width: 40px;
+        height: 24px;
+        padding: 6px 8px;
+        border-radius: 12px 0 0 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-tap-highlight-color: transparent;
+
+        &:active {
+          transform: scale(0.95);
+        }
       }
     }
   }
@@ -283,33 +302,77 @@ const handleSearchClose = () => {
   :deep(.dictionary-search) {
     width: 90% !important;
     max-width: 500px !important;
-    max-height: 50vh;
+    max-height: 60vh;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 }
 
 @media (max-width: 480px) {
   .answer-card {
     width: 95%;
-    padding: 15px;
+    padding: 15px 12px;
     max-height: 90vh;
     overflow-y: auto;
+
+    :deep(.el-card__body) {
+      padding: 12px;
+    }
 
     .learn-card {
       .title {
         font-size: 16px;
         margin-bottom: 12px;
+        text-align: center;
       }
 
       .characters {
         margin-top: 15px;
+        margin-bottom: 12px;
       }
 
       .search-btn {
-        top: 10%;
+        top: 8%;
+        right: -12px;
+        width: 36px;
+        height: 22px;
+        padding: 5px 7px;
+        font-size: 14px;
+      }
+    }
+  }
+
+  :deep(.dictionary-search) {
+    width: 95% !important;
+    max-height: 65vh !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .answer-card {
+    width: 98%;
+    padding: 12px 10px;
+
+    :deep(.el-card__body) {
+      padding: 10px;
+    }
+
+    .learn-card {
+      .title {
+        font-size: 15px;
+        margin-bottom: 10px;
+      }
+
+      .characters {
+        margin-top: 12px;
+        margin-bottom: 10px;
+      }
+
+      .search-btn {
         width: 32px;
-        height: 18px;
-        padding: 5px;
+        height: 20px;
+        padding: 4px 6px;
+        font-size: 12px;
       }
     }
   }

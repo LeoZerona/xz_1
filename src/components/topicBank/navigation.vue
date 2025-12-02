@@ -123,6 +123,7 @@
 import { Menu, User } from '@element-plus/icons-vue';
 
 const router = useRouter();
+const route = useRoute();
 const lang: Ref<boolean> = ref(false);
 const menuActiveIndex: Ref<string> = ref("0");
 const mobileMenuVisible = ref(false);
@@ -132,23 +133,23 @@ const isMobile = ref(false);
 const menus: Array<any> = [
   {
     label: "题库",
-    value: "",
-    path: "",
+    value: "topicBank",
+    path: "/topic_bank",
   },
   {
     label: "词语",
-    value: "",
-    path: "",
+    value: "words",
+    path: "/words",
   },
   {
     label: "古诗文",
-    value: "",
-    path: "",
+    value: "poetry",
+    path: "/poetry",
   },
   {
     label: "对照阅读",
-    value: "",
-    path: "",
+    value: "referenceRead",
+    path: "/reference_read",
   },
 ];
 
@@ -156,9 +157,23 @@ const checkMobile = () => {
   isMobile.value = window.innerWidth <= 768;
 };
 
+// 根据当前路由设置激活的菜单项
+const setActiveMenu = () => {
+  const currentPath = route.path;
+  const activeIndex = menus.findIndex(item => item.path === currentPath);
+  if (activeIndex !== -1) {
+    menuActiveIndex.value = String(activeIndex);
+  }
+};
+
 onMounted(() => {
   checkMobile();
   window.addEventListener('resize', checkMobile);
+  setActiveMenu();
+});
+
+watch(() => route.path, () => {
+  setActiveMenu();
 });
 
 onBeforeUnmount(() => {

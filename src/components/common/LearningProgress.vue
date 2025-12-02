@@ -53,24 +53,58 @@ const format = (percentage: number) => {
 /* 移动端适配 */
 @media (max-width: 768px) {
   .learning-progress {
+    margin-bottom: 10px;
+
     :deep(.el-progress-bar__outer) {
       height: 18px !important;
+      border-radius: 9px;
+    }
+
+    :deep(.el-progress-bar__inner) {
+      border-radius: 9px;
     }
 
     :deep(.el-progress__text) {
       font-size: 12px;
+      font-weight: 600;
     }
   }
 }
 
 @media (max-width: 480px) {
   .learning-progress {
+    margin-bottom: 8px;
+
     :deep(.el-progress-bar__outer) {
       height: 16px !important;
+      border-radius: 8px;
+    }
+
+    :deep(.el-progress-bar__inner) {
+      border-radius: 8px;
     }
 
     :deep(.el-progress__text) {
       font-size: 11px;
+    }
+  }
+}
+
+@media (max-width: 360px) {
+  .learning-progress {
+    margin-bottom: 6px;
+
+    :deep(.el-progress-bar__outer) {
+      height: 14px !important;
+      border-radius: 7px;
+    }
+
+    :deep(.el-progress-bar__inner) {
+      border-radius: 7px;
+    }
+
+    :deep(.el-progress__text) {
+      font-size: 10px;
     }
   }
 }

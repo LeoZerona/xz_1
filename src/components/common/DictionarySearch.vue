@@ -143,6 +143,13 @@ watch(() => props.visible, (newVal) => {
     max-width: 400px;
     min-height: 250px;
     padding: 15px;
+    max-height: 60vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+
+    :deep(.el-card__body) {
+      padding: 15px;
+    }
 
     .header {
       margin-bottom: 15px;
@@ -153,17 +160,37 @@ watch(() => props.visible, (newVal) => {
 
       .icon {
         font-size: 18px;
+        -webkit-tap-highlight-color: transparent;
+
+        &:active {
+          transform: scale(0.9);
+        }
+      }
+    }
+
+    .input-box {
+      :deep(.el-input__inner) {
+        font-size: 16px;
+        padding: 0 15px;
+        height: 44px;
+        line-height: 44px;
       }
     }
 
     .result {
       margin-top: 20px;
+      text-align: center;
 
       .result-item {
         margin-bottom: 15px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
 
         .label {
           font-size: 14px;
+          color: #606266;
         }
 
         .ft,
@@ -180,6 +207,11 @@ watch(() => props.visible, (newVal) => {
     width: 90%;
     min-height: 200px;
     padding: 12px;
+    max-height: 65vh;
+
+    :deep(.el-card__body) {
+      padding: 12px;
+    }
 
     .header {
       margin-bottom: 12px;
@@ -193,11 +225,21 @@ watch(() => props.visible, (newVal) => {
       }
     }
 
+    .input-box {
+      :deep(.el-input__inner) {
+        font-size: 15px;
+        padding: 0 12px;
+        height: 42px;
+        line-height: 42px;
+      }
+    }
+
     .result {
       margin-top: 15px;
 
       .result-item {
         margin-bottom: 12px;
+        gap: 6px;
 
         .label {
           font-size: 12px;
@@ -206,6 +248,55 @@ watch(() => props.visible, (newVal) => {
         .ft,
         .xz {
           font-size: 40px;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 360px) {
+  .dictionary-search {
+    width: 95%;
+    padding: 10px;
+    max-height: 70vh;
+
+    :deep(.el-card__body) {
+      padding: 10px;
+    }
+
+    .header {
+      margin-bottom: 10px;
+
+      .title {
+        font-size: 13px;
+      }
+
+      .icon {
+        font-size: 15px;
+      }
+    }
+
+    .input-box {
+      :deep(.el-input__inner) {
+        font-size: 14px;
+        height: 40px;
+        line-height: 40px;
+      }
+    }
+
+    .result {
+      margin-top: 12px;
+
+      .result-item {
+        margin-bottom: 10px;
+
+        .label {
+          font-size: 11px;
+        }
+
+        .ft,
+        .xz {
+          font-size: 35px;
         }
       }
     }
