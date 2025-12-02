@@ -54,6 +54,7 @@ const gridStyle = computed(() => {
   display: flex;
   flex-direction: column;
   border: 1px solid #d3d3d3; // 外边框
+  margin: -0.5px; // 解决相邻格子边框重叠问题
 
   /* 拼音区域 - 始终显示，即使没有拼音 */
   .pinyin-section {
@@ -66,18 +67,18 @@ const gridStyle = computed(() => {
     background-color: #fff;
     position: relative;
     
-    // 拼音区域内部两条水平虚线 - 虚线可以穿过拼音文字
+    // 拼音区域内部两条水平虚线 - 虚线在文字下方，不压住文字
     &::before,
     &::after {
       content: '';
       position: absolute;
       left: 0;
       right: 0;
-      height: 1px;
+      height: 1.5px; // 加粗虚线
       background: repeating-linear-gradient(
-        to right, #d3d3d3 0 2px, transparent 2px 4px
+        to right, #d3d3d3 0 3px, transparent 3px 5px
       );
-      z-index: 0; // 虚线在底层，可以穿过文字
+      z-index: 0; // 虚线在底层
     }
     
     // 上横线
@@ -94,9 +95,10 @@ const gridStyle = computed(() => {
       font-size: 14px;
       color: #606266;
       font-weight: 500;
-      z-index: 1;
+      z-index: 2; // 文字在上层，确保不被虚线压住
       position: relative;
-      // 移除背景色，让虚线可以穿过
+      background-color: #fff; // 添加背景色，让文字更清晰
+      padding: 0 3px;
     }
   }
 
@@ -108,6 +110,12 @@ const gridStyle = computed(() => {
     align-items: center;
     justify-content: center;
     position: relative;
+    
+    // 确保文字在虚线上方，不被压住
+    > * {
+      position: relative;
+      z-index: 1;
+    }
   }
 
   /* 田字格样式 */
@@ -122,18 +130,18 @@ const gridStyle = computed(() => {
         z-index: 0;
       }
       
-      // 水平虚线
+      // 水平虚线 - 加粗
       &::before {
         background: repeating-linear-gradient(
-          to right, #d3d3d3 0 2px, transparent 2px 4px
-        ) 0 50% / 100% 1px no-repeat;
+          to right, #d3d3d3 0 3px, transparent 3px 5px
+        ) 0 50% / 100% 1.5px no-repeat;
       }
       
-      // 垂直虚线
+      // 垂直虚线 - 加粗
       &::after {
         background: repeating-linear-gradient(
-          to bottom, #d3d3d3 0 2px, transparent 2px 4px
-        ) 50% 0 / 1px 100% no-repeat;
+          to bottom, #d3d3d3 0 3px, transparent 3px 5px
+        ) 50% 0 / 1.5px 100% no-repeat;
       }
     }
   }
@@ -151,24 +159,24 @@ const gridStyle = computed(() => {
         z-index: 0;
       }
       
-      // 水平虚线（中心横线）和垂直虚线（中心竖线）
+      // 水平虚线（中心横线）和垂直虚线（中心竖线）- 加粗
       &::before {
         inset: 0;
         background: 
           repeating-linear-gradient(
-            to right, #d3d3d3 0 2px, transparent 2px 4px
-          ) 0 50% / 100% 1px no-repeat,
+            to right, #d3d3d3 0 3px, transparent 3px 5px
+          ) 0 50% / 100% 1.5px no-repeat,
           repeating-linear-gradient(
-            to bottom, #d3d3d3 0 2px, transparent 2px 4px
-          ) 50% 0 / 1px 100% no-repeat;
+            to bottom, #d3d3d3 0 3px, transparent 3px 5px
+          ) 50% 0 / 1.5px 100% no-repeat;
       }
       
-      // 两条中心对角虚线 - 使用SVG创建单条对角线
+      // 两条中心对角虚线 - 使用SVG创建单条对角线，加粗
       &::after {
         inset: 0;
         background-image: 
           // 从左上到右下的对角线（虚线）
-          url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cline x1='0' y1='0' x2='100' y2='100' stroke='%23d3d3d3' stroke-width='0.5' stroke-dasharray='2,2'/%3E%3Cline x1='100' y1='0' x2='0' y2='100' stroke='%23d3d3d3' stroke-width='0.5' stroke-dasharray='2,2'/%3E%3C/svg%3E");
+          url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cline x1='0' y1='0' x2='100' y2='100' stroke='%23d3d3d3' stroke-width='1' stroke-dasharray='3,3'/%3E%3Cline x1='100' y1='0' x2='0' y2='100' stroke='%23d3d3d3' stroke-width='1' stroke-dasharray='3,3'/%3E%3C/svg%3E");
         background-size: 100% 100%;
         background-repeat: no-repeat;
       }

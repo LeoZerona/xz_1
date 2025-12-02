@@ -134,7 +134,7 @@ defineExpose({
   display: flex;
   flex-direction: column;
   width: v-bind(cellSize + 'px');
-  gap: 0;              /* 无间隙，因为PaperGrid已经包含边框 */
+  gap: 0;              /* 无间隙，使用负边距解决边框重叠 */
 }
 
 /* ------------ 单元格公共样式 ------------ */
