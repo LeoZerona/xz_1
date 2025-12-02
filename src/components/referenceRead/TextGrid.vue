@@ -78,6 +78,10 @@ const unit = computed(() => props.cellSize + props.gap)
 const perRow = computed(() => Math.max(1, Math.floor(wrapW.value / unit.value)))
 const textArr = computed(() => Array.from(props.text))
 
+// CSS 变量计算
+const gapPx = computed(() => `${props.gap}px`)
+const cellSizePx = computed(() => `${props.cellSize}px`)
+
 const isHighlighted = (index: number) => {
   return props.highlightIndexes.includes(index)
 }
@@ -123,7 +127,7 @@ defineExpose({
 .rice-ul {
   display: flex;
   flex-wrap: wrap;
-  gap: v-bind(gap + 'px');
+  gap: v-bind(gapPx);
   width: 100%;
   margin: 0;
   padding: 0;
@@ -133,19 +137,19 @@ defineExpose({
 .col {
   display: flex;
   flex-direction: column;
-  width: v-bind(cellSize + 'px');
+  width: v-bind(cellSizePx);
   gap: 0;              /* 无间隙，使用负边距解决边框重叠 */
 }
 
 /* ------------ 单元格公共样式 ------------ */
 .cell {
   position: relative;
-  width: v-bind(cellSize + 'px');
+  width: v-bind(cellSizePx);
   box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: v-bind(cellSize + 'px');
+  font-size: v-bind(cellSizePx);
   line-height: 1;
   color: #333;
   transition: background-color 0.2s;

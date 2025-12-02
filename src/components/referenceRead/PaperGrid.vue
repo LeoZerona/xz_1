@@ -66,8 +66,9 @@ const gridStyle = computed(() => {
     justify-content: center;
     background-color: #fff;
     position: relative;
+    z-index: 0; // 确保整个区域在底层
     
-    // 拼音区域内部两条水平虚线 - 虚线在文字下方，不压住文字
+    // 拼音区域内部两条水平虚线 - 横线完整连续，在文字下方
     &::before,
     &::after {
       content: '';
@@ -78,7 +79,7 @@ const gridStyle = computed(() => {
       background: repeating-linear-gradient(
         to right, #d3d3d3 0 3px, transparent 3px 5px
       );
-      z-index: 0; // 虚线在底层
+      z-index: -1; // 横线在底层，确保文字在上方
     }
     
     // 上横线
@@ -95,10 +96,11 @@ const gridStyle = computed(() => {
       font-size: 14px;
       color: #606266;
       font-weight: 500;
-      z-index: 2; // 文字在上层，确保不被虚线压住
+      z-index: 10; // 文字在上层，确保显示在横线上方
       position: relative;
-      background-color: #fff; // 添加背景色，让文字更清晰
-      padding: 0 3px;
+      background-color: transparent; // 透明背景，让横线可以完整显示
+      // 使用text-shadow让文字更清晰，不被横线影响
+      text-shadow: 0 0 1px rgba(255, 255, 255, 0.8);
     }
   }
 
@@ -110,11 +112,14 @@ const gridStyle = computed(() => {
     align-items: center;
     justify-content: center;
     position: relative;
+    z-index: 0; // 确保整个区域在底层
     
-    // 确保文字在虚线上方，不被压住
+    // 确保文字在虚线上方，横线完整连续
     > * {
       position: relative;
-      z-index: 1;
+      z-index: 10; // 文字在上层，确保显示在横线上方
+      // 使用text-shadow让文字更清晰，不被横线影响
+      text-shadow: 0 0 1px rgba(255, 255, 255, 0.8);
     }
   }
 
@@ -127,7 +132,7 @@ const gridStyle = computed(() => {
         position: absolute;
         inset: 0;
         pointer-events: none;
-        z-index: 0;
+        z-index: -1; // 横线在底层，确保文字在上方
       }
       
       // 水平虚线 - 加粗
@@ -156,7 +161,7 @@ const gridStyle = computed(() => {
         content: '';
         position: absolute;
         pointer-events: none;
-        z-index: 0;
+        z-index: -1; // 横线和对角线在底层，确保文字在上方
       }
       
       // 水平虚线（中心横线）和垂直虚线（中心竖线）- 加粗
@@ -183,71 +188,49 @@ const gridStyle = computed(() => {
     }
   }
 
-  /* 无格样式 - 横线格式（类似横线纸） */
+  /* 无格样式 - 立体边框效果 */
   &.none {
-    border: 1px solid #dc143c; // 红色边框
+    border: none; // 无外边框
     
     .pinyin-section {
-      border-bottom: 1px solid #dc143c;
+      border-bottom: 1px solid #d3d3d3;
       background-color: #fff;
       
-      // 拼音区域也使用红色虚线
+      // 拼音区域保持原有的两条横线样式
       &::before,
       &::after {
-        background: repeating-linear-gradient(
-          to right, #dc143c 0 2px, transparent 2px 4px
-        );
-      }
-    }
-    
-    .character-section {
-      // 无格样式：只有横线，没有竖线和格子
-      &::before {
         content: '';
         position: absolute;
         left: 0;
         right: 0;
-        top: 0;
-        bottom: 0;
-        pointer-events: none;
-        z-index: 0;
-        // 多条横线
-        background-image: repeating-linear-gradient(
-          to bottom,
-          transparent 0,
-          transparent calc(12.5% - 1px),
-          #dc143c calc(12.5% - 1px),
-          #dc143c 12.5%,
-          transparent 12.5%,
-          transparent calc(25% - 1px),
-          #dc143c calc(25% - 1px),
-          #dc143c 25%,
-          transparent 25%,
-          transparent calc(37.5% - 1px),
-          #dc143c calc(37.5% - 1px),
-          #dc143c 37.5%,
-          transparent 37.5%,
-          transparent calc(50% - 1px),
-          #dc143c calc(50% - 1px),
-          #dc143c 50%,
-          transparent 50%,
-          transparent calc(62.5% - 1px),
-          #dc143c calc(62.5% - 1px),
-          #dc143c 62.5%,
-          transparent 62.5%,
-          transparent calc(75% - 1px),
-          #dc143c calc(75% - 1px),
-          #dc143c 75%,
-          transparent 75%,
-          transparent calc(87.5% - 1px),
-          #dc143c calc(87.5% - 1px),
-          #dc143c 87.5%,
-          transparent 87.5%
+        height: 1.5px;
+        background: repeating-linear-gradient(
+          to right, #d3d3d3 0 3px, transparent 3px 5px
         );
+        z-index: -1;
+      }
+      
+      &::before {
+        top: 33%;
       }
       
       &::after {
-        display: none; // 无格样式不需要竖线
+        top: 67%;
+      }
+    }
+    
+    .character-section {
+      // 立体边框效果 - 顶部和底部有浅灰色线条形成凹陷效果
+      border-top: 1px solid #e0e0e0;
+      border-bottom: 1px solid #e0e0e0;
+      box-shadow: 
+        inset 0 1px 0 rgba(0, 0, 0, 0.05), // 顶部内阴影
+        inset 0 -1px 0 rgba(0, 0, 0, 0.05); // 底部内阴影
+      
+      // 移除所有格子线条
+      &::before,
+      &::after {
+        display: none;
       }
     }
   }
