@@ -2,7 +2,7 @@
   <div
     class="paper-grid"
     :class="[gridType, { 'with-pinyin': showPinyin, 'is-lower': isLower }]"
-    :style="gridStyle"
+    :style="mergedStyle"
   >
     <!-- 拼音区域（上方）- 始终显示，即使没有拼音 -->
     <div v-if="showPinyin" class="pinyin-section">
@@ -16,6 +16,8 @@
 </template>
 
 <script setup lang="ts">
+import { computed, useAttrs } from 'vue';
+
 interface Props {
   gridType?: "tian" | "mi" | "none"; // 田字格、米字格、无格
   showPinyin?: boolean; // 是否显示拼音
@@ -32,6 +34,8 @@ const props = withDefaults(defineProps<Props>(), {
   isLower: false,
 });
 
+const attrs = useAttrs();
+
 const gridStyle = computed(() => {
   const baseHeight = props.cellSize;
   const pinyinHeight = props.showPinyin ? Math.floor(baseHeight * 0.25) : 0; // 拼音区域占25%
@@ -41,6 +45,16 @@ const gridStyle = computed(() => {
     width: `${props.cellSize}px`,
     height: `${totalHeight}px`,
   };
+});
+
+// 合并外部传入的样式
+const mergedStyle = computed(() => {
+  const style = { ...gridStyle.value };
+  // 如果父组件传入了 style（通过 $attrs），合并字体样式
+  if (attrs.style && typeof attrs.style === 'object') {
+    Object.assign(style, attrs.style);
+  }
+  return style;
 });
 </script>
 

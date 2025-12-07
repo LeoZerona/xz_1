@@ -21,6 +21,7 @@
           highlighted: isHighlighted(i),
           'interactive-highlight': interactiveIndex === i,
         }"
+        :style="{ fontFamily: firstFont }"
         @click="handleCellClick(i)"
       >
         {{ ch }}
@@ -38,6 +39,7 @@
           highlighted: isHighlighted(i),
           'interactive-highlight': interactiveIndex === i,
         }"
+        :style="{ fontFamily: secondFont }"
         @click="handleCellClick(i)"
       >
         {{ ch }}
@@ -67,6 +69,7 @@
               highlighted: isHighlighted(i),
               'interactive-highlight': interactiveIndex === i,
             }"
+            :style="{ fontFamily: firstFont }"
             @click="handleCellClick(i)"
           >
             {{ ch }}
@@ -95,6 +98,7 @@
               highlighted: isHighlighted(i),
               'interactive-highlight': interactiveIndex === i,
             }"
+            :style="{ fontFamily: secondFont }"
             @click="handleCellClick(i)"
           >
             {{ ch }}
@@ -118,6 +122,8 @@ interface Props {
   gridType?: "tian" | "mi" | "none";
   showPinyin?: boolean;
   pinyinMap?: Record<number, string>;
+  firstFont?: string;
+  secondFont?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -129,6 +135,8 @@ const props = withDefaults(defineProps<Props>(), {
   gridType: "tian",
   showPinyin: false,
   pinyinMap: () => ({}),
+  firstFont: "HanYiKaiTiFan",
+  secondFont: "FangZhengXiaoZhuan",
 });
 
 const wrapEl = ref<HTMLUListElement>();
@@ -233,6 +241,8 @@ const perRow = computed(() =>
   Math.max(1, Math.floor(wrapW.value / unit.value))
 );
 const textArr = computed(() => Array.from(props.text));
+const firstFont = computed(() => props.firstFont);
+const secondFont = computed(() => props.secondFont);
 
 // CSS 变量计算
 // 无格模式下，左右无间隙
@@ -509,7 +519,6 @@ defineExpose({
 /* 字体 A - 上下布局的上层，左右布局的左侧 */
 .upper,
 .left {
-  font-family: "KT", KaiTi, serif;
   user-select: text;
   -webkit-user-select: text;
   -moz-user-select: text;
@@ -518,7 +527,6 @@ defineExpose({
 
 /* 字体 B - 上下布局的下层 */
 .lower {
-  font-family: "FangZhengXiaoZhuan", "思源黑体", sans-serif;
   color: transparent;
   user-select: text;
   -webkit-user-select: text;
@@ -528,11 +536,23 @@ defineExpose({
 
 /* 字体 B - 左右布局的右侧 */
 .right {
-  font-family: "FangZhengXiaoZhuan", "思源黑体", sans-serif;
   user-select: text;
   -webkit-user-select: text;
   -moz-user-select: text;
   -ms-user-select: text;
+}
+
+/* 应用字体样式到内部文字 - 确保字体能够传递到 PaperGrid 内部的文字内容 */
+.cell {
+  /* 字体样式会通过 style 绑定传递到 PaperGrid，然后继承到内部文字 */
+}
+
+.cell :deep(.character-section) {
+  font-family: inherit;
+}
+
+.cell :deep(.character-section *) {
+  font-family: inherit;
 }
 
 /* 选择时的样式优化 */

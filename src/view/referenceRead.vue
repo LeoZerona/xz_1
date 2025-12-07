@@ -41,6 +41,8 @@
         :grid-type="gridType"
         :show-pinyin="showPinyin"
         :pinyin-map="pinyinMap"
+        :first-font="firstFont"
+        :second-font="secondFont"
       />
       <el-empty v-else description="暂无内容" />
     </div>
@@ -95,6 +97,8 @@ const layoutMode = ref<"vertical" | "horizontal">("vertical");
 const gridType = ref<"tian" | "mi" | "none">("tian");
 const showPinyin = ref(false);
 const pinyinMap = ref<Record<number, string>>({});
+const firstFont = ref("HanYiKaiTiFan");
+const secondFont = ref("FangZhengXiaoZhuan");
 
 // 配置实时更新处理
 const handleConfigChange = (config: any) => {
@@ -102,6 +106,8 @@ const handleConfigChange = (config: any) => {
   layoutMode.value = config.readMode;
   gridType.value = config.gridType;
   showPinyin.value = config.showOptions.includes("pinyin");
+  firstFont.value = config.firstFont || "HanYiKaiTiFan";
+  secondFont.value = config.secondFont || "FangZhengXiaoZhuan";
 
   // 如果内容ID改变，加载新内容
   if (config.contentId && config.contentId !== currentArticleId.value) {
@@ -115,6 +121,8 @@ const handleConfigConfirm = (config: any) => {
   layoutMode.value = config.readMode;
   gridType.value = config.gridType;
   showPinyin.value = config.showOptions.includes("pinyin");
+  firstFont.value = config.firstFont || "HanYiKaiTiFan";
+  secondFont.value = config.secondFont || "FangZhengXiaoZhuan";
 
   // 加载选中的内容
   if (config.contentId) {
@@ -309,6 +317,8 @@ const initConfig = async () => {
       layoutMode.value = config.readMode || "vertical";
       gridType.value = config.gridType || "tian";
       showPinyin.value = config.showOptions?.includes("pinyin") || false;
+      firstFont.value = config.firstFont || "HanYiKaiTiFan";
+      secondFont.value = config.secondFont || "FangZhengXiaoZhuan";
 
       // 如果有保存的内容ID，加载对应内容
       if (config.contentId) {

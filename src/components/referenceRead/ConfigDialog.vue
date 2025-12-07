@@ -49,7 +49,7 @@
                   </div>
                   <div class="font-selector-group">
                     <div class="font-selector-item">
-                      <span class="font-label">第一排：</span>
+                      <span class="font-label">字体一：</span>
                       <div class="font-selector-wrapper">
                         <font-selector
                           v-model="config.firstFont"
@@ -58,7 +58,7 @@
                       </div>
                     </div>
                     <div class="font-selector-item">
-                      <span class="font-label">第二排：</span>
+                      <span class="font-label">字体二：</span>
                       <div class="font-selector-wrapper">
                         <font-selector
                           v-model="config.secondFont"
@@ -382,6 +382,12 @@ watch(visible, (newVal) => {
       config.value = { ...defaultConfig };
     }
     updatePreview();
+  } else {
+    // 面板关闭时的清理操作
+    // 可以在这里添加必要的清理逻辑，例如：
+    // - 重置某些临时状态
+    // - 清理定时器
+    // - 取消未完成的请求等
   }
 });
 
@@ -836,8 +842,6 @@ onMounted(() => {
 
   .config-container {
     padding: 0 16px;
-    flex-direction: column;
-    gap: 20px;
   }
 
   .config-section {
