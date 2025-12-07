@@ -15,9 +15,13 @@
         <div class="article-option">
           <div class="article-info">
             <span class="title">{{ article.title }}</span>
-            <span v-if="article.author" class="author">{{ article.author }}</span>
+            <span v-if="article.author" class="author">{{
+              article.author
+            }}</span>
           </div>
-          <span v-if="article.category" class="category">{{ article.category }}</span>
+          <span v-if="article.category" class="category">{{
+            article.category
+          }}</span>
         </div>
       </el-option>
     </el-select>
@@ -44,10 +48,10 @@ const emit = defineEmits<{
   change: [articleId: string];
 }>();
 
-const selectedArticleId = ref(props.currentArticleId || '');
+const selectedArticleId = ref(props.currentArticleId || "");
 
 const handleArticleChange = (articleId: string) => {
-  emit('change', articleId);
+  emit("change", articleId);
 };
 </script>
 
@@ -103,4 +107,3 @@ const handleArticleChange = (articleId: string) => {
   }
 }
 </style>
-

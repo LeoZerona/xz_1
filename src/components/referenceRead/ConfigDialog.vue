@@ -1,15 +1,18 @@
 <template>
-  <el-dialog
+  <el-drawer
     v-model="visible"
-    width="90%"
-    :max-width="1400"
+    direction="rtl"
+    size="400px"
     :close-on-click-modal="false"
-    :close-on-press-escape="false"
-    class="config-dialog"
+    :close-on-press-escape="true"
+    :modal="false"
+    :append-to-body="true"
+    :with-header="true"
+    class="config-drawer"
   >
     <template #header>
-      <div class="dialog-header">
-        <span class="dialog-title">对照阅读配置</span>
+      <div class="drawer-header">
+        <span class="drawer-title">对照阅读配置</span>
         <el-button
           type="default"
           :icon="RefreshLeft"
@@ -237,37 +240,19 @@
           </el-tab-pane>
         </el-tabs>
       </div>
-
-      <!-- 右侧预览区域 -->
-      <div class="preview-panel">
-        <div class="preview-title">预览效果</div>
-        <div class="preview-content">
-          <text-grid-preview
-            :text="previewText"
-            :read-mode="config.readMode"
-            :first-font="config.firstFont"
-            :second-font="config.secondFont"
-            :grid-type="config.gridType"
-            :show-pinyin="config.showOptions.includes('pinyin')"
-          />
-        </div>
-      </div>
     </div>
 
-    <template #footer>
-      <div class="dialog-footer">
-        <el-button @click="handleCancel">取消</el-button>
-        <el-button type="primary" @click="handleConfirm">确认</el-button>
-      </div>
-    </template>
-  </el-dialog>
+    <div class="drawer-footer">
+      <el-button @click="handleCancel">取消</el-button>
+      <el-button type="primary" @click="handleConfirm">确认</el-button>
+    </div>
+  </el-drawer>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from "vue";
+import { ref, computed, watch, onMounted, nextTick } from "vue";
 import { RefreshLeft } from "@element-plus/icons-vue";
 import FontSelector from "./FontSelector.vue";
-import TextGridPreview from "./TextGridPreview.vue";
 import PaperGrid from "./PaperGrid.vue";
 
 interface Config {
@@ -288,6 +273,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   "update:modelValue": [value: boolean];
   confirm: [config: Config];
+  change: [config: Config];
 }>();
 
 const visible = computed({
@@ -344,7 +330,8 @@ const handleContentChange = (contentId: string) => {
 };
 
 const updatePreview = () => {
-  // 预览更新逻辑
+  // 实时更新配置到阅读模块
+  emit("change", { ...config.value });
 };
 
 const handleConfirm = () => {
@@ -370,8 +357,23 @@ const handleResetToDefault = () => {
   updatePreview();
 };
 
-// 监听对话框打开，重置配置
+// 监听对话框关闭，清理唯一标识类
 watch(visible, (newVal) => {
+  if (!newVal) {
+    // 关闭时清理 class，避免影响其他组件
+    nextTick(() => {
+      const drawer = document.querySelector(".reference-read-config-drawer");
+      const overlay = document.querySelector(".reference-read-config-overlay");
+      if (drawer) {
+        drawer.classList.remove("reference-read-config-drawer");
+      }
+      if (overlay) {
+        overlay.classList.remove("reference-read-config-overlay");
+      }
+    });
+    return;
+  }
+
   if (newVal) {
     loadClassicalTexts();
     // 可以在这里加载保存的配置，如果没有保存的配置，则使用默认配置
@@ -397,6 +399,56 @@ watch(visible, (newVal) => {
       config.value = { ...defaultConfig };
     }
     updatePreview();
+
+    // 动态设置抽屉样式，确保不覆盖导航栏，并添加唯一标识类
+    // 使用 setTimeout 确保 drawer 已经渲染到 DOM 中
+    setTimeout(() => {
+      // 查找所有 drawer，找到当前组件打开的 drawer
+      const allDrawers = document.querySelectorAll(".el-drawer.rtl");
+      const allOverlays = document.querySelectorAll(".el-overlay");
+
+      // 找到最近打开的 drawer（通常是最后一个，且包含 config-drawer 相关的元素）
+      // 通过查找包含 "对照阅读配置" 文本的 drawer 来确认
+      let targetDrawer: HTMLElement | null = null;
+      let targetOverlay: HTMLElement | null = null;
+
+      for (let i = allDrawers.length - 1; i >= 0; i--) {
+        const drawer = allDrawers[i] as HTMLElement;
+        // 检查 drawer 中是否包含当前组件的特定内容
+        if (
+          drawer
+            .querySelector(".drawer-title")
+            ?.textContent?.includes("对照阅读配置")
+        ) {
+          targetDrawer = drawer;
+          break;
+        }
+      }
+
+      // 如果没找到，使用最后一个 drawer（假设是当前打开的）
+      if (!targetDrawer && allDrawers.length > 0) {
+        targetDrawer = allDrawers[allDrawers.length - 1] as HTMLElement;
+      }
+
+      // 找到对应的 overlay（通常是 drawer 的兄弟元素或父元素的子元素）
+      if (targetDrawer && allOverlays.length > 0) {
+        // overlay 通常在 drawer 之前
+        const drawerIndex = Array.from(allDrawers).indexOf(targetDrawer);
+        if (drawerIndex < allOverlays.length) {
+          targetOverlay = allOverlays[drawerIndex] as HTMLElement;
+        } else if (allOverlays.length > 0) {
+          targetOverlay = allOverlays[allOverlays.length - 1] as HTMLElement;
+        }
+      }
+
+      // 添加唯一标识类
+      if (targetDrawer) {
+        targetDrawer.classList.add("reference-read-config-drawer");
+      }
+      if (targetOverlay) {
+        targetOverlay.classList.add("reference-read-config-overlay");
+      }
+    }, 100);
   }
 });
 
@@ -406,42 +458,90 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
-.config-dialog {
-  :deep(.el-dialog__body) {
+.config-drawer {
+  :deep(.el-drawer) {
+    z-index: 999 !important; // 低于导航栏的 z-index: 1000
+    position: fixed !important;
+    right: 0 !important;
+    top: 60px !important; // 从导航栏下方开始显示
+    height: calc(100vh - 60px) !important; // 减去导航栏高度
+    box-shadow: none !important; // 移除阴影
+  }
+
+  :deep(.el-drawer.rtl) {
+    z-index: 999 !important;
+    position: fixed !important;
+    right: 0 !important;
+    top: 60px !important;
+    height: calc(100vh - 60px) !important;
+    box-shadow: none !important; // 移除阴影
+  }
+
+  :deep(.el-drawer__header) {
+    margin-bottom: 20px;
+    padding: 20px 20px 0 20px;
+    position: relative;
+    z-index: 1;
+  }
+
+  :deep(.el-overlay) {
+    z-index: 998 !important; // 低于抽屉，确保在导航栏下方
+    background-color: transparent !important;
+    pointer-events: none !important;
+    top: 60px !important; // 从导航栏下方开始
+    height: calc(100vh - 60px) !important; // 减去导航栏高度
+  }
+
+  :deep(.el-drawer__body) {
     padding: 20px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
   }
 }
 
 .config-container {
-  display: flex;
-  gap: 30px;
-  min-height: 600px;
+  flex: 1;
+  overflow-y: auto;
 }
 
-.dialog-header {
+.drawer-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   width: 100%;
+  position: relative;
+  z-index: 1;
 
-  .dialog-title {
+  .drawer-title {
     font-size: 18px;
     font-weight: 600;
     color: #303133;
-    margin-right: 20px;
+    flex: 1;
   }
 
   .reset-button {
     flex-shrink: 0;
+    position: relative;
+    z-index: 1;
   }
 }
 
+.drawer-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 20px;
+  border-top: 1px solid #e4e7ed;
+  margin-top: 20px;
+  flex-shrink: 0;
+}
+
 .config-panel {
-  flex: 0 0 420px;
-  padding-right: 24px;
-  border-right: 1px solid #e4e7ed;
-  max-height: 70vh;
+  width: 100%;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 
   .config-tabs {
     display: flex;
@@ -661,28 +761,6 @@ onMounted(() => {
   }
 }
 
-.preview-panel {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-
-  .preview-title {
-    font-size: 16px;
-    font-weight: 600;
-    color: #303133;
-    margin-bottom: 20px;
-  }
-
-  .preview-content {
-    flex: 1;
-    background-color: #f5f6f7;
-    border-radius: 8px;
-    padding: 20px;
-    overflow-y: auto;
-    max-height: 60vh;
-  }
-}
-
 .content-option {
   .content-title {
     font-size: 14px;
@@ -705,32 +783,40 @@ onMounted(() => {
   }
 }
 
-.dialog-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
 /* 移动端适配 */
 @media (max-width: 768px) {
+  .config-drawer {
+    :deep(.el-drawer) {
+      width: 90% !important;
+    }
+  }
+
   .config-container {
     flex-direction: column;
     gap: 20px;
   }
 
   .config-panel {
-    flex: none;
-    border-right: none;
-    border-bottom: 1px solid #e4e7ed;
-    padding-right: 0;
     padding-bottom: 20px;
-    max-height: none;
   }
+}
+</style>
 
-  .preview-panel {
-    .preview-content {
-      max-height: 40vh;
-    }
-  }
+<style lang="scss">
+// 使用唯一的 class 名称限定样式作用范围，只影响当前组件的 drawer
+// 这样不会影响其他组件中的 drawer
+.reference-read-config-drawer {
+  top: 60px !important;
+  height: calc(100vh - 60px) !important;
+  z-index: 999 !important;
+  position: fixed !important;
+  box-shadow: none !important; // 移除阴影
+}
+
+// 遮罩层也要调整，只针对当前组件的遮罩层
+.reference-read-config-overlay {
+  top: 60px !important;
+  height: calc(100vh - 60px) !important;
+  z-index: 998 !important;
 }
 </style>

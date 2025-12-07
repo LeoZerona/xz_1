@@ -1,42 +1,28 @@
 <template>
   <navigation></navigation>
 
-  <!-- 配置对话框 -->
-  <config-dialog v-model="showConfigDialog" @confirm="handleConfigConfirm" />
+  <!-- 配置抽屉 -->
+  <config-dialog
+    v-model="showConfigDialog"
+    @confirm="handleConfigConfirm"
+    @change="handleConfigChange"
+  />
 
-  <div class="reference-read-container" v-if="!showConfigDialog">
-    <div class="control-panel">
-      <!-- 文章选择器 -->
-      <article-selector
-        :articles="articles"
-        :current-article-id="currentArticleId"
-        @change="handleArticleChange"
-      />
+  <div
+    class="reference-read-container"
+    :class="{ 'config-open': showConfigDialog }"
+  >
+    <!-- 配置按钮 - 固定在右上角 -->
+    <el-button
+      class="config-button"
+      type="primary"
+      :icon="Setting"
+      circle
+      @click="showConfigDialog = true"
+    />
 
-      <!-- 工具栏 -->
-      <toolbar
-        v-model:fontSize="cellSize"
-        :min-size="30"
-        :max-size="120"
-        @reset="handleReset"
-      />
-
-      <!-- 搜索面板 -->
-      <search-panel
-        :text="text"
-        @search="handleSearch"
-        @highlight="handleHighlight"
-        @clear="handleClearSearch"
-      />
-
-      <!-- 稿纸配置面板 -->
-      <grid-config-panel
-        v-model:layout-mode="layoutMode"
-        v-model:grid-type="gridType"
-        v-model:show-pinyin="showPinyin"
-      />
-
-      <!-- 进度条 -->
+    <!-- 进度条 - 固定在左侧 -->
+    <div class="fixed-progress-bar">
       <progress-bar
         :current-position="readingPosition"
         :total-count="text.length"
@@ -63,13 +49,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, watch, nextTick } from "vue";
-import ArticleSelector from "@/components/referenceRead/ArticleSelector.vue";
+import { ref, onMounted, onBeforeUnmount, watch } from "vue";
+import { Setting } from "@element-plus/icons-vue";
 import TextGrid from "@/components/referenceRead/TextGrid.vue";
-import SearchPanel from "@/components/referenceRead/SearchPanel.vue";
-import Toolbar from "@/components/referenceRead/Toolbar.vue";
 import ProgressBar from "@/components/referenceRead/ProgressBar.vue";
-import GridConfigPanel from "@/components/referenceRead/GridConfigPanel.vue";
 import ConfigDialog from "@/components/referenceRead/ConfigDialog.vue";
 import { getPinyinMap } from "@/utils/pinyin";
 
@@ -99,7 +82,7 @@ const articles: Article[] = [
 ];
 
 /* ===== 状态管理 ===== */
-const showConfigDialog = ref(true); // 默认显示配置对话框
+const showConfigDialog = ref(false); // 默认不显示配置抽屉
 const currentArticleId = ref("default");
 const text = ref("");
 const loading = ref(false);
@@ -113,6 +96,19 @@ const layoutMode = ref<"vertical" | "horizontal">("vertical");
 const gridType = ref<"tian" | "mi" | "none">("tian");
 const showPinyin = ref(false);
 const pinyinMap = ref<Record<number, string>>({});
+
+// 配置实时更新处理
+const handleConfigChange = (config: any) => {
+  // 实时应用配置到阅读模块
+  layoutMode.value = config.readMode;
+  gridType.value = config.gridType;
+  showPinyin.value = config.showOptions.includes("pinyin");
+
+  // 如果内容ID改变，加载新内容
+  if (config.contentId && config.contentId !== currentArticleId.value) {
+    loadClassicalText(config.contentId);
+  }
+};
 
 // 配置确认处理
 const handleConfigConfirm = (config: any) => {
@@ -199,46 +195,47 @@ const loadArticle = async (articleId: string) => {
 };
 
 /* ===== 文章切换 ===== */
-const handleArticleChange = (articleId: string) => {
-  currentArticleId.value = articleId;
-  loadArticle(articleId);
-};
+// 保留函数以备将来使用
+// const handleArticleChange = (articleId: string) => {
+//   currentArticleId.value = articleId;
+//   loadArticle(articleId);
+// };
 
 /* ===== 搜索功能 ===== */
-const handleSearch = (_searchKey: string, indexes: number[]) => {
-  highlightIndexes.value = indexes;
-  if (indexes.length > 0) {
-    // 滚动到第一个结果
-    nextTick(() => {
-      scrollToIndex(indexes[0]);
-    });
-  }
-};
+// 保留函数以备将来使用
+// const handleSearch = (_searchKey: string, indexes: number[]) => {
+//   highlightIndexes.value = indexes;
+//   if (indexes.length > 0) {
+//     nextTick(() => {
+//       scrollToIndex(indexes[0]);
+//     });
+//   }
+// };
 
-const handleHighlight = (indexes: number[]) => {
-  highlightIndexes.value = indexes;
-  if (indexes.length > 0) {
-    scrollToIndex(indexes[0]);
-  }
-};
+// const handleHighlight = (indexes: number[]) => {
+//   highlightIndexes.value = indexes;
+//   if (indexes.length > 0) {
+//     scrollToIndex(indexes[0]);
+//   }
+// };
 
-const handleClearSearch = () => {
-  highlightIndexes.value = [];
-};
+// const handleClearSearch = () => {
+//   highlightIndexes.value = [];
+// };
 
-const scrollToIndex = (index: number) => {
-  // 通过计算位置滚动到指定字符
-  const element = document.querySelector(`[data-char-index="${index}"]`);
-  if (element) {
-    element.scrollIntoView({ behavior: "smooth", block: "center" });
-  }
-};
+// const scrollToIndex = (index: number) => {
+//   const element = document.querySelector(`[data-char-index="${index}"]`);
+//   if (element) {
+//     element.scrollIntoView({ behavior: "smooth", block: "center" });
+//   }
+// };
 
 /* ===== 字体大小重置 ===== */
-const handleReset = () => {
-  cellSize.value = 69;
-  gap.value = 10;
-};
+// 保留函数以备将来使用
+// const handleReset = () => {
+//   cellSize.value = 69;
+//   gap.value = 10;
+// };
 
 /* ===== 阅读进度跟踪 ===== */
 const startReadingTimer = () => {
@@ -303,9 +300,34 @@ const updateReadingPosition = () => {
   readingPosition.value = Math.round(text.value.length * scrollPercentage);
 };
 
+// 初始化配置
+const initConfig = async () => {
+  // 加载保存的配置
+  const savedConfig = localStorage.getItem("referenceReadConfig");
+  if (savedConfig) {
+    try {
+      const config = JSON.parse(savedConfig);
+      layoutMode.value = config.readMode || "vertical";
+      gridType.value = config.gridType || "tian";
+      showPinyin.value = config.showOptions?.includes("pinyin") || false;
+
+      // 如果有保存的内容ID，加载对应内容
+      if (config.contentId) {
+        await loadClassicalText(config.contentId);
+        return;
+      }
+    } catch (error) {
+      console.error("加载保存的配置失败:", error);
+    }
+  }
+
+  // 如果没有保存的配置，加载默认文章
+  await loadArticle(currentArticleId.value);
+};
+
 /* ===== 生命周期 ===== */
 onMounted(async () => {
-  await loadArticle(currentArticleId.value);
+  await initConfig();
   startReadingTimer();
   window.addEventListener("scroll", updateReadingPosition);
   updateReadingPosition();
@@ -348,24 +370,49 @@ watch(
   min-height: calc(100vh - 60px);
   padding: 20px;
   background-color: #f5f6f7;
+  position: relative;
+  display: flex;
+  gap: 20px;
 
-  .control-panel {
-    max-width: 1200px;
-    margin: 0 auto 20px;
-    background-color: #fff;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  .config-button {
+    position: fixed;
+    right: 30px;
+    top: 80px;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  .fixed-progress-bar {
+    position: fixed;
+    left: 20px;
+    top: 80px;
+    width: 200px;
+    z-index: 100;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 
   .text-content {
+    flex: 1;
     max-width: 1200px;
-    margin: 0 auto;
+    margin-left: 220px;
+    margin-right: auto;
     background-color: #fff;
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     min-height: 400px;
+    transition: all 0.3s ease;
+  }
+
+  &.config-open {
+    .text-content {
+      max-width: calc(
+        100% - 240px - 420px
+      ); // 减去进度条宽度(220px)和抽屉宽度(400px)+间距(20px)
+      margin-right: 420px; // 为右侧抽屉留出空间（400px抽屉 + 20px间距）
+    }
   }
 }
 
@@ -373,14 +420,32 @@ watch(
 @media (max-width: 768px) {
   .reference-read-container {
     padding: 15px;
+    flex-direction: column;
 
-    .control-panel {
-      padding: 15px;
+    .config-button {
+      right: 20px;
+      top: 70px;
+    }
+
+    .fixed-progress-bar {
+      position: relative;
+      left: auto;
+      top: auto;
+      width: 100%;
+      max-height: none;
       margin-bottom: 15px;
     }
 
     .text-content {
+      margin-left: 0;
       padding: 15px;
+    }
+
+    &.config-open {
+      .text-content {
+        max-width: 100%;
+        margin-right: 0;
+      }
     }
   }
 }
@@ -389,8 +454,7 @@ watch(
   .reference-read-container {
     padding: 10px;
 
-    .control-panel {
-      padding: 12px;
+    .fixed-progress-bar {
       margin-bottom: 12px;
     }
 

@@ -56,7 +56,6 @@ const formatTime = (seconds: number): string => {
   padding: 15px;
   background-color: #fff;
   border-radius: 8px;
-  margin-bottom: 20px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
   .progress-info {
@@ -79,7 +78,8 @@ const formatTime = (seconds: number): string => {
 
   .progress-stats {
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
+    gap: 5px;
     margin-top: 10px;
     font-size: 12px;
     color: #909399;
