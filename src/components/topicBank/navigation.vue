@@ -232,7 +232,12 @@ $vertical-height: 60px;
   justify-content: space-between;
   padding: 0px 10px;
   box-shadow: 0 4px 6px -3px rgba(200, 200, 200, 0.8);
-  position: relative;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  background-color: #f5f6f7;
   z-index: 1000;
 
   .left {

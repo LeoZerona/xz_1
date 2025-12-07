@@ -153,6 +153,7 @@ const selectWord = (word: any) => {
 .words-container {
   min-height: calc(100vh - 60px);
   padding: 20px;
+  padding-top: 80px; // 为固定的 navigation 留出空间（60px navigation + 20px 间距）
   background-color: #f5f6f7;
 
   .content {
@@ -237,6 +238,7 @@ const selectWord = (word: any) => {
 @media (max-width: 768px) {
   .words-container {
     padding: 15px;
+    padding-top: 65px; // 移动端 navigation 高度（50px）+ 间距（15px）
 
     .content {
       padding: 20px;
@@ -287,6 +289,7 @@ const selectWord = (word: any) => {
 @media (max-width: 480px) {
   .words-container {
     padding: 10px;
+    padding-top: 58px; // 超小屏幕 navigation 高度（48px）+ 间距（10px）
 
     .content {
       padding: 15px;

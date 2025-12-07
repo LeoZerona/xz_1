@@ -369,6 +369,7 @@ watch(
 .reference-read-container {
   min-height: calc(100vh - 60px);
   padding: 20px;
+  padding-top: 80px; // 为固定的 navigation 留出空间（60px navigation + 20px 间距）
   background-color: #f5f6f7;
   position: relative;
   display: flex;
@@ -377,7 +378,7 @@ watch(
   .config-button {
     position: fixed;
     right: 30px;
-    top: 80px;
+    top: 80px; // 60px navigation + 20px 间距
     z-index: 100;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   }
@@ -385,7 +386,7 @@ watch(
   .fixed-progress-bar {
     position: fixed;
     left: 20px;
-    top: 80px;
+    top: 80px; // 60px navigation + 20px 间距
     width: 200px;
     z-index: 100;
     max-height: calc(100vh - 100px);
@@ -420,11 +421,12 @@ watch(
 @media (max-width: 768px) {
   .reference-read-container {
     padding: 15px;
+    padding-top: 70px; // 移动端 navigation 高度（50px）+ 间距（20px）
     flex-direction: column;
 
     .config-button {
       right: 20px;
-      top: 70px;
+      top: 70px; // 50px navigation + 20px 间距
     }
 
     .fixed-progress-bar {
@@ -453,6 +455,7 @@ watch(
 @media (max-width: 480px) {
   .reference-read-container {
     padding: 10px;
+    padding-top: 68px; // 超小屏幕 navigation 高度（48px）+ 间距（20px）
 
     .fixed-progress-bar {
       margin-bottom: 12px;

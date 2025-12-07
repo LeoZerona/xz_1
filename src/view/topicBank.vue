@@ -459,6 +459,7 @@ function switchShow(index: number) {
 .contain {
   display: flex;
   min-height: 100vh;
+  padding-top: 60px; // 为固定的 navigation 留出空间
   
   .left {
     width: 55%;
@@ -700,6 +701,7 @@ function switchShow(index: number) {
 @media (max-width: 768px) {
   .contain {
     flex-direction: column;
+    padding-top: 50px; // 移动端 navigation 高度
     padding-bottom: 100px; // 为固定按钮留出空间
 
     .left {
@@ -901,6 +903,7 @@ function switchShow(index: number) {
 
 @media (max-width: 480px) {
   .contain {
+    padding-top: 48px; // 超小屏幕 navigation 高度
     padding-bottom: 90px;
 
     .left {
