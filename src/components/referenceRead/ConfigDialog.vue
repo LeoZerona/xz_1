@@ -166,7 +166,7 @@
                                   ? 'xué'
                                   : ''
                               "
-                              :cell-size="35"
+                              :cell-size="25"
                               class="preview-grid-cell"
                             >
                               字
@@ -186,7 +186,7 @@
                                   ? 'xué'
                                   : ''
                               "
-                              :cell-size="35"
+                              :cell-size="25"
                               class="preview-grid-cell"
                             >
                               字
@@ -206,7 +206,7 @@
                                   ? 'xué'
                                   : ''
                               "
-                              :cell-size="35"
+                              :cell-size="25"
                               class="preview-grid-cell"
                             >
                               字
@@ -526,8 +526,6 @@ onMounted(() => {
         .paper-item {
           display: flex;
           flex-direction: column;
-          gap: 16px;
-          margin-bottom: 24px;
 
           &:last-child {
             margin-bottom: 0;
@@ -558,7 +556,7 @@ onMounted(() => {
               display: flex;
               flex-direction: row;
               flex-wrap: wrap;
-              gap: 16px;
+              gap: 12px;
               width: 100%;
             }
 
@@ -566,24 +564,24 @@ onMounted(() => {
               margin: 0;
               height: auto;
               line-height: normal;
-              border: 1px solid #e4e7ed;
-              border-radius: 6px;
-              padding: 16px 20px;
+              border: none;
+              border-radius: 0;
+              padding: 10px 12px;
               transition: all 0.3s;
               cursor: pointer;
               display: flex;
               align-items: center;
-              flex: 0 1 calc(33.333% - 11px);
+              flex: 0 0 auto;
               box-sizing: border-box;
               margin-bottom: 0;
+              background-color: transparent;
 
               &:hover {
-                border-color: #409eff;
-                background-color: #f0f9ff;
+                background-color: transparent;
               }
 
               .el-radio__input {
-                margin-right: 12px;
+                margin-right: 8px;
                 flex-shrink: 0;
               }
 
@@ -591,23 +589,24 @@ onMounted(() => {
                 display: flex;
                 flex-direction: column;
                 align-items: center;
-                gap: 16px;
+                gap: 8px;
                 padding-left: 0;
                 width: 100%;
                 flex: 1;
 
                 .radio-label {
-                  font-size: 14px;
+                  font-size: 13px;
                   color: #303133;
                   font-weight: 500;
                   flex-shrink: 0;
+                  margin-top: 4px;
                 }
 
                 .grid-preview-small {
                   display: flex;
                   align-items: center;
                   justify-content: center;
-                  padding: 8px;
+                  padding: 4px;
                   background-color: #fff;
                   border-radius: 4px;
                   border: 1px solid #e4e7ed;
@@ -620,8 +619,7 @@ onMounted(() => {
               }
 
               &.is-checked {
-                border-color: #409eff;
-                background-color: #ecf5ff;
+                background-color: transparent;
               }
             }
           }
