@@ -1,6 +1,14 @@
 <template>
   <div class="grid-config-panel">
     <div class="config-section">
+      <div class="config-label">布局模式：</div>
+      <el-radio-group v-model="localLayoutMode" @change="handleLayoutModeChange">
+        <el-radio label="vertical">上下阅读</el-radio>
+        <el-radio label="horizontal">左右阅读</el-radio>
+      </el-radio-group>
+    </div>
+    
+    <div class="config-section">
       <div class="config-label">稿纸样式：</div>
       <el-radio-group v-model="localGridType" @change="handleGridTypeChange">
         <el-radio label="tian">田字格</el-radio>
@@ -22,19 +30,29 @@
 import { ref, watch } from 'vue';
 
 interface Props {
+  layoutMode?: 'vertical' | 'horizontal';
   gridType: 'tian' | 'mi' | 'none';
   showPinyin: boolean;
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  layoutMode: 'vertical',
+});
 
 const emit = defineEmits<{
+  'update:layoutMode': [mode: 'vertical' | 'horizontal'];
   'update:gridType': [type: 'tian' | 'mi' | 'none'];
   'update:showPinyin': [show: boolean];
 }>();
 
+const localLayoutMode = ref(props.layoutMode);
 const localGridType = ref(props.gridType);
 const localShowOptions = ref<string[]>(props.showPinyin ? ['pinyin'] : []);
+
+const handleLayoutModeChange = (value: 'vertical' | 'horizontal') => {
+  localLayoutMode.value = value;
+  emit('update:layoutMode', value);
+};
 
 const handleGridTypeChange = (value: 'tian' | 'mi' | 'none') => {
   localGridType.value = value;
@@ -45,6 +63,10 @@ const handleOptionsChange = (values: string[]) => {
   localShowOptions.value = values;
   emit('update:showPinyin', values.includes('pinyin'));
 };
+
+watch(() => props.layoutMode, (newVal) => {
+  localLayoutMode.value = newVal;
+});
 
 watch(() => props.gridType, (newVal) => {
   localGridType.value = newVal;
