@@ -20,6 +20,7 @@
         :class="{
           highlighted: isHighlighted(i),
           'interactive-highlight': interactiveIndex === i,
+          'keyboard-selected': isKeyboardSelected(i),
         }"
         :style="{ fontFamily: firstFont }"
         @click="handleCellClick(i)"
@@ -38,6 +39,8 @@
         :class="{
           highlighted: isHighlighted(i),
           'interactive-highlight': interactiveIndex === i,
+          'show-second-font': shouldShowSecondFont(i),
+          'keyboard-selected': isKeyboardSelected(i),
         }"
         :style="{ fontFamily: secondFont }"
         @click="handleCellClick(i)"
@@ -68,6 +71,7 @@
             :class="{
               highlighted: isHighlighted(i),
               'interactive-highlight': interactiveIndex === i,
+              'keyboard-selected': isKeyboardSelected(i),
             }"
             :style="{ fontFamily: firstFont }"
             @click="handleCellClick(i)"
@@ -97,6 +101,8 @@
             :class="{
               highlighted: isHighlighted(i),
               'interactive-highlight': interactiveIndex === i,
+              'show-second-font': shouldShowSecondFont(i),
+              'keyboard-selected': isKeyboardSelected(i),
             }"
             :style="{ fontFamily: secondFont }"
             @click="handleCellClick(i)"
@@ -110,7 +116,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount, watch } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from "vue";
 import PaperGrid from "./PaperGrid.vue";
 
 interface Props {
@@ -124,6 +130,8 @@ interface Props {
   pinyinMap?: Record<number, string>;
   firstFont?: string;
   secondFont?: string;
+  functionMode?: "compare" | "learn";
+  operationMode?: "keyboard" | "typing";
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -137,6 +145,8 @@ const props = withDefaults(defineProps<Props>(), {
   pinyinMap: () => ({}),
   firstFont: "HanYiKaiTiFan",
   secondFont: "FangZhengXiaoZhuan",
+  functionMode: "compare",
+  operationMode: "keyboard",
 });
 
 const wrapEl = ref<HTMLUListElement>();
@@ -146,6 +156,12 @@ const wrapW = ref(0);
 
 // 交互高亮状态：当前鼠标悬停或点击的字符索引
 const interactiveIndex = ref<number | null>(null);
+
+// 方向键操控模式：当前选中的字符索引
+const selectedIndex = ref<number | null>(null);
+
+// 方向键操控模式：显示第二行字体的字符索引集合
+const visibleSecondFonts = ref<Set<number>>(new Set());
 
 const update = () => {
   if (props.layoutMode === "vertical") {
@@ -210,11 +226,14 @@ onMounted(() => {
   if (props.layoutMode === "horizontal") {
     document.addEventListener("selectionchange", handleSelectionChange);
   }
+  // 监听键盘事件
+  window.addEventListener("keydown", handleKeyDown);
 });
 
 onBeforeUnmount(() => {
   window.removeEventListener("resize", update);
   document.removeEventListener("selectionchange", handleSelectionChange);
+  window.removeEventListener("keydown", handleKeyDown);
   // 清理定时器
   if (clickTimer) {
     clearTimeout(clickTimer);
@@ -265,6 +284,15 @@ const handleCellClick = (index: number) => {
     clickTimer = null;
   }
   interactiveIndex.value = index;
+  
+  // 如果是学习模式且是方向键操控模式，只记录选中的索引，不显示第二行字体
+  if (props.functionMode === "learn" && props.operationMode === "keyboard") {
+    selectedIndex.value = index;
+    // 不立即显示被点击字符的第二行字体，需要按右键才显示
+    // 滚动到可见区域
+    scrollToIndex(index);
+  }
+  
   // 点击后保持高亮一段时间
   clickTimer = window.setTimeout(() => {
     // 检查是否还有文本选择（仅左右布局模式）
@@ -279,6 +307,168 @@ const handleCellClick = (index: number) => {
     }
     clickTimer = null;
   }, 2000);
+};
+
+// 获取指定索引所在行的所有字符索引
+const getRowIndexes = (index: number): number[] => {
+  const rowNumber = Math.floor(index / perRow.value);
+  const startIndex = rowNumber * perRow.value;
+  const endIndex = Math.min(startIndex + perRow.value, props.text.length);
+  const rowIndexes: number[] = [];
+  for (let i = startIndex; i < endIndex; i++) {
+    rowIndexes.push(i);
+  }
+  return rowIndexes;
+};
+
+// 检查指定索引所在行的所有字符是否都已经显示
+const isRowAllVisible = (index: number): boolean => {
+  const rowIndexes = getRowIndexes(index);
+  return rowIndexes.length > 0 && rowIndexes.every((idx) => visibleSecondFonts.value.has(idx));
+};
+
+// 检查指定索引所在行的所有字符是否都已经隐藏
+const isRowAllHidden = (index: number): boolean => {
+  const rowIndexes = getRowIndexes(index);
+  return rowIndexes.length > 0 && rowIndexes.every((idx) => !visibleSecondFonts.value.has(idx));
+};
+
+// 处理键盘方向键事件
+const handleKeyDown = (event: KeyboardEvent) => {
+  // 只在学习模式且方向键操控模式下处理
+  if (props.functionMode !== "learn" || props.operationMode !== "keyboard") {
+    return;
+  }
+  
+  // 如果没有选中任何字符，不处理
+  if (selectedIndex.value === null) {
+    return;
+  }
+  
+  const currentIndex = selectedIndex.value;
+  const textLength = props.text.length;
+  
+  switch (event.key) {
+    case "ArrowLeft":
+      // 左键：隐藏当前字符的第二行字体（回撤）
+      if (currentIndex >= 0 && currentIndex < textLength) {
+        visibleSecondFonts.value.delete(currentIndex);
+        // 移动到前一个字符
+        if (currentIndex > 0) {
+          const prevIndex = currentIndex - 1;
+          selectedIndex.value = prevIndex;
+          // 滚动到可见区域
+          scrollToIndex(prevIndex);
+        }
+      }
+      event.preventDefault();
+      break;
+    case "ArrowRight":
+      // 右键：显示当前字符的第二行字体，然后移动到下一个字符
+      if (currentIndex >= 0 && currentIndex < textLength) {
+        // 先显示当前字符的第二行字体
+        visibleSecondFonts.value.add(currentIndex);
+        // 然后移动到下一个字符
+        if (currentIndex < textLength - 1) {
+          const nextIndex = currentIndex + 1;
+          selectedIndex.value = nextIndex;
+          // 滚动到可见区域
+          scrollToIndex(nextIndex);
+        }
+      }
+      event.preventDefault();
+      break;
+    case "ArrowUp":
+      // 上键：隐藏当前行的所有字符的第二行字体
+      if (currentIndex >= 0 && currentIndex < textLength) {
+        // 如果当前行已经全部隐藏，则移动到上一行并隐藏上一行
+        if (isRowAllHidden(currentIndex)) {
+          if (currentIndex >= perRow.value) {
+            const prevRowIndex = currentIndex - perRow.value;
+            const prevRowIndexes = getRowIndexes(prevRowIndex);
+            prevRowIndexes.forEach((idx) => {
+              visibleSecondFonts.value.delete(idx);
+            });
+            selectedIndex.value = prevRowIndex;
+            scrollToIndex(prevRowIndex);
+          }
+        } else {
+          // 否则隐藏当前行
+          const rowIndexes = getRowIndexes(currentIndex);
+          rowIndexes.forEach((idx) => {
+            visibleSecondFonts.value.delete(idx);
+          });
+          // 移动到上一行的相同位置
+          if (currentIndex >= perRow.value) {
+            const prevRowIndex = currentIndex - perRow.value;
+            selectedIndex.value = prevRowIndex;
+            scrollToIndex(prevRowIndex);
+          }
+        }
+      }
+      event.preventDefault();
+      break;
+    case "ArrowDown":
+      // 下键：显示当前行的所有字符的第二行字体
+      if (currentIndex >= 0 && currentIndex < textLength) {
+        // 如果当前行已经全部显示，则移动到下一行并显示下一行
+        if (isRowAllVisible(currentIndex)) {
+          const nextRowIndex = currentIndex + perRow.value;
+          if (nextRowIndex < textLength) {
+            const nextRowIndexes = getRowIndexes(nextRowIndex);
+            nextRowIndexes.forEach((idx) => {
+              visibleSecondFonts.value.add(idx);
+            });
+            selectedIndex.value = nextRowIndex;
+            scrollToIndex(nextRowIndex);
+          }
+        } else {
+          // 否则显示当前行
+          const rowIndexes = getRowIndexes(currentIndex);
+          rowIndexes.forEach((idx) => {
+            visibleSecondFonts.value.add(idx);
+          });
+          // 移动到下一行的相同位置
+          const nextRowIndex = currentIndex + perRow.value;
+          if (nextRowIndex < textLength) {
+            selectedIndex.value = nextRowIndex;
+            scrollToIndex(nextRowIndex);
+          }
+        }
+      }
+      event.preventDefault();
+      break;
+  }
+};
+
+// 检查第二行字体是否应该显示
+const shouldShowSecondFont = (index: number) => {
+  return visibleSecondFonts.value.has(index);
+};
+
+// 检查是否是键盘选中的字符
+const isKeyboardSelected = (index: number) => {
+  return (
+    props.functionMode === "learn" &&
+    props.operationMode === "keyboard" &&
+    selectedIndex.value === index
+  );
+};
+
+// 滚动到指定索引的字符
+const scrollToIndex = (index: number) => {
+  nextTick(() => {
+    const element = document.querySelector(
+      `[data-char-index="${index}"]`
+    ) as HTMLElement;
+    if (element) {
+      element.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+        inline: "center",
+      });
+    }
+  });
 };
 
 /* ===== 处理复制事件，避免重复复制 ===== */
@@ -351,11 +541,18 @@ const handleCopy = (e: ClipboardEvent) => {
   }
 };
 
+// 重置功能：清除所有显示的第二行字体
+const resetVisibleFonts = () => {
+  visibleSecondFonts.value.clear();
+  selectedIndex.value = null;
+};
+
 defineExpose({
   update,
   wrapEl,
   leftWrapEl,
   rightWrapEl,
+  resetVisibleFonts,
 });
 </script>
 
@@ -532,6 +729,44 @@ defineExpose({
   -webkit-user-select: text;
   -moz-user-select: text;
   -ms-user-select: text;
+  transition: color 0.2s ease;
+}
+
+/* 显示第二行字体 */
+.lower.show-second-font {
+  color: #333 !important;
+}
+
+/* 键盘选中状态的视觉指示器 */
+.cell.keyboard-selected {
+  animation: keyboardSelectedPulse 1.5s ease-in-out infinite;
+  z-index: 15;
+  position: relative;
+}
+
+.cell.keyboard-selected :deep(.paper-grid) {
+  border-color: #409eff !important;
+  border-width: 3px !important;
+  box-shadow: 0 0 20px rgba(64, 158, 255, 0.6),
+    0 0 40px rgba(64, 158, 255, 0.4),
+    inset 0 0 10px rgba(64, 158, 255, 0.2) !important;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* 键盘选中状态的脉冲动画 */
+@keyframes keyboardSelectedPulse {
+  0% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.08);
+    filter: brightness(1.15);
+  }
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
 }
 
 /* 字体 B - 左右布局的右侧 */
@@ -540,6 +775,23 @@ defineExpose({
   -webkit-user-select: text;
   -moz-user-select: text;
   -ms-user-select: text;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* 显示第二行字体（左右布局模式）- 添加淡入动画 */
+.right.show-second-font {
+  animation: fadeInRight 0.3s ease-out;
+}
+
+@keyframes fadeInRight {
+  from {
+    opacity: 0.7;
+    transform: translateX(-3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 /* 应用字体样式到内部文字 - 确保字体能够传递到 PaperGrid 内部的文字内容 */

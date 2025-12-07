@@ -27,12 +27,24 @@
         :total-count="text.length"
         :reading-time="readingTime"
       />
+      <!-- 重置按钮 - 只在学习模式且方向键操控模式下显示 -->
+      <el-button
+        v-if="functionMode === 'learn' && operationMode === 'keyboard'"
+        class="reset-button"
+        type="warning"
+        size="small"
+        @click="handleReset"
+        :icon="RefreshLeft"
+      >
+        重置
+      </el-button>
     </div>
 
     <!-- 文字网格 -->
     <div class="text-content" v-loading="loading">
       <text-grid
         v-if="text"
+        ref="textGridRef"
         :text="text"
         :cell-size="cellSize"
         :gap="gap"
@@ -43,6 +55,8 @@
         :pinyin-map="pinyinMap"
         :first-font="firstFont"
         :second-font="secondFont"
+        :function-mode="functionMode"
+        :operation-mode="operationMode"
       />
       <el-empty v-else description="暂无内容" />
     </div>
@@ -51,7 +65,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, watch } from "vue";
-import { Setting, Close } from "@element-plus/icons-vue";
+import { Setting, Close, RefreshLeft } from "@element-plus/icons-vue";
 import TextGrid from "@/components/referenceRead/TextGrid.vue";
 import ProgressBar from "@/components/referenceRead/ProgressBar.vue";
 import ConfigDialog from "@/components/referenceRead/ConfigDialog.vue";
@@ -99,6 +113,9 @@ const showPinyin = ref(false);
 const pinyinMap = ref<Record<number, string>>({});
 const firstFont = ref("HanYiKaiTiFan");
 const secondFont = ref("FangZhengXiaoZhuan");
+const functionMode = ref<"compare" | "learn">("compare");
+const operationMode = ref<"keyboard" | "typing">("keyboard");
+const textGridRef = ref<InstanceType<typeof TextGrid> | null>(null);
 
 // 配置实时更新处理
 const handleConfigChange = (config: any) => {
@@ -108,6 +125,8 @@ const handleConfigChange = (config: any) => {
   showPinyin.value = config.showOptions.includes("pinyin");
   firstFont.value = config.firstFont || "HanYiKaiTiFan";
   secondFont.value = config.secondFont || "FangZhengXiaoZhuan";
+  functionMode.value = config.functionMode || "compare";
+  operationMode.value = config.operationMode || "keyboard";
 
   // 如果内容ID改变，加载新内容
   if (config.contentId && config.contentId !== currentArticleId.value) {
@@ -123,6 +142,8 @@ const handleConfigConfirm = (config: any) => {
   showPinyin.value = config.showOptions.includes("pinyin");
   firstFont.value = config.firstFont || "HanYiKaiTiFan";
   secondFont.value = config.secondFont || "FangZhengXiaoZhuan";
+  functionMode.value = config.functionMode || "compare";
+  operationMode.value = config.operationMode || "keyboard";
 
   // 加载选中的内容
   if (config.contentId) {
@@ -239,6 +260,16 @@ const loadArticle = async (articleId: string) => {
 
 /* ===== 字体大小重置 ===== */
 // 保留函数以备将来使用
+// 重置功能：清除所有显示的第二行字体
+const handleReset = () => {
+  if (
+    textGridRef.value &&
+    typeof textGridRef.value.resetVisibleFonts === "function"
+  ) {
+    textGridRef.value.resetVisibleFonts();
+  }
+};
+
 // const handleReset = () => {
 //   cellSize.value = 69;
 //   gap.value = 10;
@@ -319,6 +350,8 @@ const initConfig = async () => {
       showPinyin.value = config.showOptions?.includes("pinyin") || false;
       firstFont.value = config.firstFont || "HanYiKaiTiFan";
       secondFont.value = config.secondFont || "FangZhengXiaoZhuan";
+      functionMode.value = config.functionMode || "compare";
+      operationMode.value = config.operationMode || "keyboard";
 
       // 如果有保存的内容ID，加载对应内容
       if (config.contentId) {
@@ -426,6 +459,20 @@ watch(
     max-height: calc(100vh - 80px);
     overflow-y: auto;
     overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .reset-button {
+    width: 100%;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
   }
 
   .text-content {
