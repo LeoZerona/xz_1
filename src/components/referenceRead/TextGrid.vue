@@ -1,17 +1,13 @@
 <template>
   <!-- 上下布局模式 -->
-  <ul 
+  <ul
     v-if="layoutMode === 'vertical'"
-    ref="wrapEl" 
-    class="rice-ul" 
-    :class="{ 'grid-none': gridType === 'none' }" 
+    ref="wrapEl"
+    class="rice-ul"
+    :class="{ 'grid-none': gridType === 'none' }"
     @copy="handleCopy"
   >
-    <li
-      v-for="(ch, i) in textArr"
-      :key="i"
-      class="col"
-    >
+    <li v-for="(ch, i) in textArr" :key="i" class="col">
       <!-- 上层：字体 A -->
       <paper-grid
         :grid-type="gridType"
@@ -21,7 +17,7 @@
         class="cell upper"
         :data-char="ch"
         :data-char-index="i"
-        :class="{ 'highlighted': isHighlighted(i) }"
+        :class="{ highlighted: isHighlighted(i) }"
       >
         {{ ch }}
       </paper-grid>
@@ -34,27 +30,23 @@
         class="cell lower"
         :data-char="ch"
         :data-char-index="i"
-        :class="{ 'highlighted': isHighlighted(i) }"
+        :class="{ highlighted: isHighlighted(i) }"
       >
         {{ ch }}
       </paper-grid>
     </li>
   </ul>
-  
+
   <!-- 左右布局模式 -->
   <div v-else class="horizontal-layout" @copy="handleCopy">
     <!-- 左侧区域：字体 A（楷体） -->
     <div class="text-area left-area">
-      <ul 
-        ref="leftWrapEl" 
-        class="rice-ul" 
+      <ul
+        ref="leftWrapEl"
+        class="rice-ul"
         :class="{ 'grid-none': gridType === 'none' }"
       >
-        <li
-          v-for="(ch, i) in textArr"
-          :key="i"
-          class="col"
-        >
+        <li v-for="(ch, i) in textArr" :key="i" class="col">
           <paper-grid
             :grid-type="gridType"
             :show-pinyin="showPinyin"
@@ -63,9 +55,9 @@
             class="cell left"
             :data-char="ch"
             :data-char-index="i"
-            :class="{ 
-              'highlighted': isHighlighted(i),
-              'interactive-highlight': interactiveIndex === i
+            :class="{
+              highlighted: isHighlighted(i),
+              'interactive-highlight': interactiveIndex === i,
             }"
             @click="handleCellClick(i)"
           >
@@ -74,19 +66,15 @@
         </li>
       </ul>
     </div>
-    
+
     <!-- 右侧区域：字体 B（小篆） -->
     <div class="text-area right-area">
-      <ul 
-        ref="rightWrapEl" 
-        class="rice-ul" 
+      <ul
+        ref="rightWrapEl"
+        class="rice-ul"
         :class="{ 'grid-none': gridType === 'none' }"
       >
-        <li
-          v-for="(ch, i) in textArr"
-          :key="i"
-          class="col"
-        >
+        <li v-for="(ch, i) in textArr" :key="i" class="col">
           <paper-grid
             :grid-type="gridType"
             :show-pinyin="showPinyin"
@@ -95,9 +83,9 @@
             class="cell right"
             :data-char="ch"
             :data-char-index="i"
-            :class="{ 
-              'highlighted': isHighlighted(i),
-              'interactive-highlight': interactiveIndex === i
+            :class="{
+              highlighted: isHighlighted(i),
+              'interactive-highlight': interactiveIndex === i,
             }"
             @click="handleCellClick(i)"
           >
@@ -110,214 +98,243 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
-import PaperGrid from './PaperGrid.vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from "vue";
+import PaperGrid from "./PaperGrid.vue";
 
 interface Props {
   text: string;
   cellSize: number;
   gap: number;
   highlightIndexes?: number[];
-  layoutMode?: 'vertical' | 'horizontal';
-  gridType?: 'tian' | 'mi' | 'none';
+  layoutMode?: "vertical" | "horizontal";
+  gridType?: "tian" | "mi" | "none";
   showPinyin?: boolean;
   pinyinMap?: Record<number, string>;
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  text: '',
+  text: "",
   cellSize: 69,
   gap: 10,
   highlightIndexes: () => [],
-  layoutMode: 'vertical',
-  gridType: 'tian',
+  layoutMode: "vertical",
+  gridType: "tian",
   showPinyin: false,
   pinyinMap: () => ({}),
 });
 
-const wrapEl = ref<HTMLUListElement>()
-const leftWrapEl = ref<HTMLUListElement>()
-const rightWrapEl = ref<HTMLUListElement>()
-const wrapW = ref(0)
+const wrapEl = ref<HTMLUListElement>();
+const leftWrapEl = ref<HTMLUListElement>();
+const rightWrapEl = ref<HTMLUListElement>();
+const wrapW = ref(0);
 
 // 交互高亮状态：当前鼠标悬停或点击的字符索引
-const interactiveIndex = ref<number | null>(null)
+const interactiveIndex = ref<number | null>(null);
 
 const update = () => {
-  if (props.layoutMode === 'vertical') {
-    wrapW.value = wrapEl.value?.getBoundingClientRect().width ?? 0
+  if (props.layoutMode === "vertical") {
+    wrapW.value = wrapEl.value?.getBoundingClientRect().width ?? 0;
   } else {
     // 左右布局模式下，使用左侧区域的宽度
-    wrapW.value = leftWrapEl.value?.getBoundingClientRect().width ?? 0
+    wrapW.value = leftWrapEl.value?.getBoundingClientRect().width ?? 0;
   }
-}
+};
 
 // 处理文本选择事件
 const handleSelectionChange = () => {
-  if (props.layoutMode !== 'horizontal') return
-  
-  const selection = window.getSelection()
+  if (props.layoutMode !== "horizontal") return;
+
+  const selection = window.getSelection();
   if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
     // 选择被清除或折叠时，延迟清除高亮
     setTimeout(() => {
       if (!window.getSelection()?.toString()) {
-        interactiveIndex.value = null
+        interactiveIndex.value = null;
       }
-    }, 100)
-    return
+    }, 100);
+    return;
   }
-  
-  const range = selection.getRangeAt(0)
-  
+
+  const range = selection.getRangeAt(0);
+
   // 检查选择是否在左侧区域
-  const leftCells = Array.from(leftWrapEl.value?.querySelectorAll('.cell.left') || [])
-    .filter(cell => range.intersectsNode(cell))
-  
+  const leftCells = Array.from(
+    leftWrapEl.value?.querySelectorAll(".cell.left") || []
+  ).filter((cell) => range.intersectsNode(cell));
+
   if (leftCells.length > 0) {
     // 获取第一个选中的单元格的索引
-    const firstCell = leftCells[0] as HTMLElement
-    const index = parseInt(firstCell.getAttribute('data-char-index') || '-1')
+    const firstCell = leftCells[0] as HTMLElement;
+    const index = parseInt(firstCell.getAttribute("data-char-index") || "-1");
     if (index >= 0) {
-      interactiveIndex.value = index
+      interactiveIndex.value = index;
     }
-    return
+    return;
   }
-  
+
   // 检查选择是否在右侧区域
-  const rightCells = Array.from(rightWrapEl.value?.querySelectorAll('.cell.right') || [])
-    .filter(cell => range.intersectsNode(cell))
-  
+  const rightCells = Array.from(
+    rightWrapEl.value?.querySelectorAll(".cell.right") || []
+  ).filter((cell) => range.intersectsNode(cell));
+
   if (rightCells.length > 0) {
     // 获取第一个选中的单元格的索引
-    const firstCell = rightCells[0] as HTMLElement
-    const index = parseInt(firstCell.getAttribute('data-char-index') || '-1')
+    const firstCell = rightCells[0] as HTMLElement;
+    const index = parseInt(firstCell.getAttribute("data-char-index") || "-1");
     if (index >= 0) {
-      interactiveIndex.value = index
+      interactiveIndex.value = index;
     }
   }
-}
+};
 
 onMounted(() => {
-  update()
-  window.addEventListener('resize', update)
+  update();
+  window.addEventListener("resize", update);
   // 监听文本选择变化
-  if (props.layoutMode === 'horizontal') {
-    document.addEventListener('selectionchange', handleSelectionChange)
+  if (props.layoutMode === "horizontal") {
+    document.addEventListener("selectionchange", handleSelectionChange);
   }
-})
+});
 
 onBeforeUnmount(() => {
-  window.removeEventListener('resize', update)
-  document.removeEventListener('selectionchange', handleSelectionChange)
+  window.removeEventListener("resize", update);
+  document.removeEventListener("selectionchange", handleSelectionChange);
   // 清理定时器
   if (clickTimer) {
-    clearTimeout(clickTimer)
-    clickTimer = null
+    clearTimeout(clickTimer);
+    clickTimer = null;
   }
-})
+});
 
 // 监听布局模式变化，动态添加/移除选择监听
-watch(() => props.layoutMode, (newMode) => {
-  if (newMode === 'horizontal') {
-    document.addEventListener('selectionchange', handleSelectionChange)
-  } else {
-    document.removeEventListener('selectionchange', handleSelectionChange)
-    interactiveIndex.value = null
+watch(
+  () => props.layoutMode,
+  (newMode) => {
+    if (newMode === "horizontal") {
+      document.addEventListener("selectionchange", handleSelectionChange);
+    } else {
+      document.removeEventListener("selectionchange", handleSelectionChange);
+      interactiveIndex.value = null;
+    }
   }
-})
+);
 
-const unit = computed(() => props.cellSize + props.gap)
-const perRow = computed(() => Math.max(1, Math.floor(wrapW.value / unit.value)))
-const textArr = computed(() => Array.from(props.text))
+const unit = computed(() => props.cellSize + props.gap);
+const perRow = computed(() =>
+  Math.max(1, Math.floor(wrapW.value / unit.value))
+);
+const textArr = computed(() => Array.from(props.text));
 
 // CSS 变量计算
 // 无格模式下，左右无间隙
-const gapPx = computed(() => props.gridType === 'none' ? '0px' : `${props.gap}px`)
-const cellSizePx = computed(() => `${props.cellSize}px`)
+const gapPx = computed(() =>
+  props.gridType === "none" ? "0px" : `${props.gap}px`
+);
+const cellSizePx = computed(() => `${props.cellSize}px`);
 
 const isHighlighted = (index: number) => {
-  return props.highlightIndexes.includes(index)
-}
+  return props.highlightIndexes.includes(index);
+};
 
 /* ===== 处理单元格交互事件（左右布局模式） ===== */
-let clickTimer: number | null = null
+let clickTimer: number | null = null;
 
 const handleCellClick = (index: number) => {
-  if (props.layoutMode === 'horizontal') {
+  if (props.layoutMode === "horizontal") {
     // 清除之前的定时器
     if (clickTimer) {
-      clearTimeout(clickTimer)
-      clickTimer = null
+      clearTimeout(clickTimer);
+      clickTimer = null;
     }
-    interactiveIndex.value = index
+    interactiveIndex.value = index;
     // 点击后保持高亮一段时间
     clickTimer = window.setTimeout(() => {
       // 检查是否还有文本选择
-      const selection = window.getSelection()
+      const selection = window.getSelection();
       if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
-        interactiveIndex.value = null
+        interactiveIndex.value = null;
       }
-      clickTimer = null
-    }, 2000)
+      clickTimer = null;
+    }, 2000);
   }
-}
+};
 
 /* ===== 处理复制事件，避免重复复制 ===== */
 const handleCopy = (e: ClipboardEvent) => {
-  e.preventDefault()
-  const selection = window.getSelection()
-  if (!selection || selection.rangeCount === 0) return
+  e.preventDefault();
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0) return;
 
-  const range = selection.getRangeAt(0)
-  
-  let text = ''
-  
-  if (props.layoutMode === 'vertical') {
+  const range = selection.getRangeAt(0);
+
+  let text = "";
+
+  if (props.layoutMode === "vertical") {
     // 上下布局：优先获取上层单元格（楷体）
-    const upperCells = Array.from(wrapEl.value?.querySelectorAll('.cell.upper') || [])
-      .filter(cell => range.intersectsNode(cell))
-      .map(cell => cell.getAttribute('data-char') || cell.textContent?.trim() || '')
-      .filter(char => char)
-    text = upperCells.join('')
-    
+    const upperCells = Array.from(
+      wrapEl.value?.querySelectorAll(".cell.upper") || []
+    )
+      .filter((cell) => range.intersectsNode(cell))
+      .map(
+        (cell) =>
+          cell.getAttribute("data-char") || cell.textContent?.trim() || ""
+      )
+      .filter((char) => char);
+    text = upperCells.join("");
+
     // 如果上层没有选中，尝试获取下层（小篆）
     if (!text) {
-      const lowerCells = Array.from(wrapEl.value?.querySelectorAll('.cell.lower') || [])
-        .filter(cell => range.intersectsNode(cell))
-        .map(cell => cell.getAttribute('data-char') || cell.textContent?.trim() || '')
-        .filter(char => char)
-      text = lowerCells.join('')
+      const lowerCells = Array.from(
+        wrapEl.value?.querySelectorAll(".cell.lower") || []
+      )
+        .filter((cell) => range.intersectsNode(cell))
+        .map(
+          (cell) =>
+            cell.getAttribute("data-char") || cell.textContent?.trim() || ""
+        )
+        .filter((char) => char);
+      text = lowerCells.join("");
     }
   } else {
     // 左右布局：优先获取左侧单元格（楷体）
-    const leftCells = Array.from(leftWrapEl.value?.querySelectorAll('.cell.left') || [])
-      .filter(cell => range.intersectsNode(cell))
-      .map(cell => cell.getAttribute('data-char') || cell.textContent?.trim() || '')
-      .filter(char => char)
-    text = leftCells.join('')
-    
+    const leftCells = Array.from(
+      leftWrapEl.value?.querySelectorAll(".cell.left") || []
+    )
+      .filter((cell) => range.intersectsNode(cell))
+      .map(
+        (cell) =>
+          cell.getAttribute("data-char") || cell.textContent?.trim() || ""
+      )
+      .filter((char) => char);
+    text = leftCells.join("");
+
     // 如果左侧没有选中，尝试获取右侧（小篆）
     if (!text) {
-      const rightCells = Array.from(rightWrapEl.value?.querySelectorAll('.cell.right') || [])
-        .filter(cell => range.intersectsNode(cell))
-        .map(cell => cell.getAttribute('data-char') || cell.textContent?.trim() || '')
-        .filter(char => char)
-      text = rightCells.join('')
+      const rightCells = Array.from(
+        rightWrapEl.value?.querySelectorAll(".cell.right") || []
+      )
+        .filter((cell) => range.intersectsNode(cell))
+        .map(
+          (cell) =>
+            cell.getAttribute("data-char") || cell.textContent?.trim() || ""
+        )
+        .filter((char) => char);
+      text = rightCells.join("");
     }
   }
-  
+
   // 将处理后的文字写入剪贴板
   if (e.clipboardData && text) {
-    e.clipboardData.setData('text/plain', text)
+    e.clipboardData.setData("text/plain", text);
   }
-}
+};
 
 defineExpose({
   update,
   wrapEl,
   leftWrapEl,
-  rightWrapEl
-})
+  rightWrapEl,
+});
 </script>
 
 <style scoped>
@@ -336,7 +353,7 @@ defineExpose({
   display: flex;
   flex-direction: column;
   width: v-bind(cellSizePx);
-  gap: 0;              /* 无间隙，使用负边距解决边框重叠 */
+  gap: 0; /* 无间隙，使用负边距解决边框重叠 */
 }
 
 /* ------------ 单元格公共样式 ------------ */
@@ -394,8 +411,8 @@ defineExpose({
 
 /* 字体 A - 上下布局的上层，左右布局的左侧 */
 .upper,
-.left { 
-  font-family: 'KT', KaiTi, serif; 
+.left {
+  font-family: "KT", KaiTi, serif;
   user-select: text;
   -webkit-user-select: text;
   -moz-user-select: text;
@@ -403,8 +420,8 @@ defineExpose({
 }
 
 /* 字体 B - 上下布局的下层 */
-.lower { 
-  font-family: 'FangZhengXiaoZhuan', '思源黑体', sans-serif; 
+.lower {
+  font-family: "FangZhengXiaoZhuan", "思源黑体", sans-serif;
   color: transparent;
   user-select: text;
   -webkit-user-select: text;
@@ -414,7 +431,7 @@ defineExpose({
 
 /* 字体 B - 左右布局的右侧 */
 .right {
-  font-family: 'FangZhengXiaoZhuan', '思源黑体', sans-serif;
+  font-family: "FangZhengXiaoZhuan", "思源黑体", sans-serif;
   user-select: text;
   -webkit-user-select: text;
   -moz-user-select: text;
@@ -470,20 +487,20 @@ defineExpose({
   display: flex;
   width: 100%;
   gap: 20px;
-  
+
   .text-area {
     flex: 1;
     min-width: 0; /* 防止 flex 子元素溢出 */
-    
+
     .rice-ul {
       width: 100%;
     }
   }
-  
+
   .left-area {
     /* 左侧区域样式 */
   }
-  
+
   .right-area {
     /* 右侧区域样式 */
   }
@@ -497,4 +514,3 @@ defineExpose({
   }
 }
 </style>
-

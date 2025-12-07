@@ -1,6 +1,10 @@
 <template>
   <navigation></navigation>
-  <div class="reference-read-container">
+
+  <!-- 配置对话框 -->
+  <config-dialog v-model="showConfigDialog" @confirm="handleConfigConfirm" />
+
+  <div class="reference-read-container" v-if="!showConfigDialog">
     <div class="control-panel">
       <!-- 文章选择器 -->
       <article-selector
@@ -59,20 +63,14 @@
 </template>
 
 <script setup lang="ts">
-import {
-  ref,
-  computed,
-  onMounted,
-  onBeforeUnmount,
-  watch,
-  nextTick,
-} from "vue";
+import { ref, onMounted, onBeforeUnmount, watch, nextTick } from "vue";
 import ArticleSelector from "@/components/referenceRead/ArticleSelector.vue";
 import TextGrid from "@/components/referenceRead/TextGrid.vue";
 import SearchPanel from "@/components/referenceRead/SearchPanel.vue";
 import Toolbar from "@/components/referenceRead/Toolbar.vue";
 import ProgressBar from "@/components/referenceRead/ProgressBar.vue";
 import GridConfigPanel from "@/components/referenceRead/GridConfigPanel.vue";
+import ConfigDialog from "@/components/referenceRead/ConfigDialog.vue";
 import { getPinyinMap } from "@/utils/pinyin";
 
 interface Article {
@@ -101,6 +99,7 @@ const articles: Article[] = [
 ];
 
 /* ===== 状态管理 ===== */
+const showConfigDialog = ref(true); // 默认显示配置对话框
 const currentArticleId = ref("default");
 const text = ref("");
 const loading = ref(false);
@@ -114,6 +113,59 @@ const layoutMode = ref<"vertical" | "horizontal">("vertical");
 const gridType = ref<"tian" | "mi" | "none">("tian");
 const showPinyin = ref(false);
 const pinyinMap = ref<Record<number, string>>({});
+
+// 配置确认处理
+const handleConfigConfirm = (config: any) => {
+  // 应用配置
+  layoutMode.value = config.readMode;
+  gridType.value = config.gridType;
+  showPinyin.value = config.showOptions.includes("pinyin");
+
+  // 加载选中的内容
+  if (config.contentId) {
+    loadClassicalText(config.contentId);
+  }
+
+  showConfigDialog.value = false;
+};
+
+// 加载文言文内容
+const loadClassicalText = async (contentId: string) => {
+  try {
+    // 尝试从 public 目录加载
+    const response = await fetch("/classical_texts.json");
+    if (!response.ok) {
+      // 如果失败，尝试从 src 目录加载（开发环境）
+      const devResponse = await fetch(
+        "/src/static/text_res/classical_texts.json"
+      );
+      if (!devResponse.ok) {
+        throw new Error("无法加载文言文数据");
+      }
+      const data = await devResponse.json();
+      const content = data.find((item: any) => item.id === contentId);
+      if (content) {
+        text.value = content.text;
+        currentArticleId.value = contentId;
+        if (showPinyin.value) {
+          pinyinMap.value = getPinyinMap(text.value);
+        }
+      }
+      return;
+    }
+    const data = await response.json();
+    const content = data.find((item: any) => item.id === contentId);
+    if (content) {
+      text.value = content.text;
+      currentArticleId.value = contentId;
+      if (showPinyin.value) {
+        pinyinMap.value = getPinyinMap(text.value);
+      }
+    }
+  } catch (error) {
+    console.error("加载文言文内容失败:", error);
+  }
+};
 
 /* ===== 加载文章 ===== */
 const loadArticle = async (articleId: string) => {
@@ -153,7 +205,7 @@ const handleArticleChange = (articleId: string) => {
 };
 
 /* ===== 搜索功能 ===== */
-const handleSearch = (searchKey: string, indexes: number[]) => {
+const handleSearch = (_searchKey: string, indexes: number[]) => {
   highlightIndexes.value = indexes;
   if (indexes.length > 0) {
     // 滚动到第一个结果
