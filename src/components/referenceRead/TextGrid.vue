@@ -17,7 +17,11 @@
         class="cell upper"
         :data-char="ch"
         :data-char-index="i"
-        :class="{ highlighted: isHighlighted(i) }"
+        :class="{
+          highlighted: isHighlighted(i),
+          'interactive-highlight': interactiveIndex === i,
+        }"
+        @click="handleCellClick(i)"
       >
         {{ ch }}
       </paper-grid>
@@ -30,7 +34,11 @@
         class="cell lower"
         :data-char="ch"
         :data-char-index="i"
-        :class="{ highlighted: isHighlighted(i) }"
+        :class="{
+          highlighted: isHighlighted(i),
+          'interactive-highlight': interactiveIndex === i,
+        }"
+        @click="handleCellClick(i)"
       >
         {{ ch }}
       </paper-grid>
@@ -214,7 +222,8 @@ watch(
       document.addEventListener("selectionchange", handleSelectionChange);
     } else {
       document.removeEventListener("selectionchange", handleSelectionChange);
-      interactiveIndex.value = null;
+      // 上下布局模式切换时不清除高亮，让用户可以看到点击效果
+      // interactiveIndex.value = null;
     }
   }
 );
@@ -236,27 +245,30 @@ const isHighlighted = (index: number) => {
   return props.highlightIndexes.includes(index);
 };
 
-/* ===== 处理单元格交互事件（左右布局模式） ===== */
+/* ===== 处理单元格交互事件（左右布局模式和上下布局模式） ===== */
 let clickTimer: number | null = null;
 
 const handleCellClick = (index: number) => {
-  if (props.layoutMode === "horizontal") {
-    // 清除之前的定时器
-    if (clickTimer) {
-      clearTimeout(clickTimer);
-      clickTimer = null;
-    }
-    interactiveIndex.value = index;
-    // 点击后保持高亮一段时间
-    clickTimer = window.setTimeout(() => {
-      // 检查是否还有文本选择
+  // 清除之前的定时器
+  if (clickTimer) {
+    clearTimeout(clickTimer);
+    clickTimer = null;
+  }
+  interactiveIndex.value = index;
+  // 点击后保持高亮一段时间
+  clickTimer = window.setTimeout(() => {
+    // 检查是否还有文本选择（仅左右布局模式）
+    if (props.layoutMode === "horizontal") {
       const selection = window.getSelection();
       if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
         interactiveIndex.value = null;
       }
-      clickTimer = null;
-    }, 2000);
-  }
+    } else {
+      // 上下布局模式：直接清除高亮
+      interactiveIndex.value = null;
+    }
+    clickTimer = null;
+  }, 2000);
 };
 
 /* ===== 处理复制事件，避免重复复制 ===== */
@@ -375,37 +387,122 @@ defineExpose({
   background-color: rgba(255, 255, 0, 0.3);
 }
 
-/* 交互高亮动画 - 左右布局模式 - 优化版 */
+/* 交互高亮动画 - 左右布局模式和上下布局模式 - 优化版 */
 .cell.interactive-highlight {
   animation: highlightPulse 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-  background-color: rgba(64, 158, 255, 0.25);
-  box-shadow: 0 0 12px rgba(64, 158, 255, 0.5);
   z-index: 10;
   position: relative;
   border-radius: 4px;
 }
 
 .cell.interactive-highlight :deep(.paper-grid) {
-  background-color: rgba(64, 158, 255, 0.2);
-  box-shadow: 0 0 10px rgba(64, 158, 255, 0.4);
-  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  /* border-color: #ffd700 !important; */
+  border-color: #ffd700 !important;
+  border-width: 2px !important;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 1), 0 0 25px rgba(255, 215, 0, 0.8),
+    0 0 35px rgba(255, 215, 0, 0.6), 0 0 45px rgba(255, 215, 0, 0.4),
+    inset 0 0 15px rgba(255, 215, 0, 0.3) !important;
+  filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.9));
+}
+
+.cell.interactive-highlight :deep(.paper-grid .character-section),
+.cell.interactive-highlight :deep(.paper-grid .pinyin-section) {
+  border-color: #ffd700 !important;
+  border-width: 1.5px !important;
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.9), 0 0 15px rgba(255, 215, 0, 0.7),
+    0 0 20px rgba(255, 215, 0, 0.5), inset 0 0 8px rgba(255, 215, 0, 0.4) !important;
+  filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.8));
+}
+
+/* 田字格内框线 - 金黄色 + 发光效果 */
+.cell.interactive-highlight :deep(.paper-grid.tian .character-section::before) {
+  background: repeating-linear-gradient(
+      to right,
+      #ffd700 0 3px,
+      transparent 3px 5px
+    )
+    0 50% / 100% 3px no-repeat !important;
+  z-index: 0 !important;
+  filter: drop-shadow(0 0 8px rgba(255, 215, 0, 1))
+    drop-shadow(0 0 15px rgba(255, 215, 0, 0.9))
+    drop-shadow(0 0 25px rgba(255, 215, 0, 0.7))
+    drop-shadow(0 0 35px rgba(255, 215, 0, 0.5)) !important;
+  opacity: 1 !important;
+}
+
+.cell.interactive-highlight :deep(.paper-grid.tian .character-section::after) {
+  background: repeating-linear-gradient(
+      to bottom,
+      #ffd700 0 3px,
+      transparent 3px 5px
+    )
+    50% 0 / 3px 100% no-repeat !important;
+  z-index: 0 !important;
+  filter: drop-shadow(0 0 8px rgba(255, 215, 0, 1))
+    drop-shadow(0 0 15px rgba(255, 215, 0, 0.9))
+    drop-shadow(0 0 25px rgba(255, 215, 0, 0.7))
+    drop-shadow(0 0 35px rgba(255, 215, 0, 0.5)) !important;
+  opacity: 1 !important;
+}
+
+/* 米字格内框线 - 金黄色 + 发光效果 */
+.cell.interactive-highlight :deep(.paper-grid.mi .character-section::before) {
+  background: repeating-linear-gradient(
+        to right,
+        #ffd700 0 3px,
+        transparent 3px 5px
+      )
+      0 50% / 100% 3px no-repeat,
+    repeating-linear-gradient(to bottom, #ffd700 0 3px, transparent 3px 5px) 50%
+      0 / 3px 100% no-repeat !important;
+  z-index: 0 !important;
+  filter: drop-shadow(0 0 8px rgba(255, 215, 0, 1))
+    drop-shadow(0 0 15px rgba(255, 215, 0, 0.9))
+    drop-shadow(0 0 25px rgba(255, 215, 0, 0.7))
+    drop-shadow(0 0 35px rgba(255, 215, 0, 0.5)) !important;
+  opacity: 1 !important;
+}
+
+.cell.interactive-highlight :deep(.paper-grid.mi .character-section::after) {
+  background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cline x1='0' y1='0' x2='100' y2='100' stroke='%23FFD700' stroke-width='2.5' stroke-dasharray='3,3'/%3E%3Cline x1='100' y1='0' x2='0' y2='100' stroke='%23FFD700' stroke-width='2.5' stroke-dasharray='3,3'/%3E%3C/svg%3E") !important;
+  z-index: 0 !important;
+  filter: drop-shadow(0 0 8px rgba(255, 215, 0, 1))
+    drop-shadow(0 0 15px rgba(255, 215, 0, 0.9))
+    drop-shadow(0 0 25px rgba(255, 215, 0, 0.7))
+    drop-shadow(0 0 35px rgba(255, 215, 0, 0.5)) !important;
+  opacity: 1 !important;
+}
+
+/* 拼音区域分隔线 - 金黄色 + 发光效果 */
+.cell.interactive-highlight :deep(.paper-grid .pinyin-section::before),
+.cell.interactive-highlight :deep(.paper-grid .pinyin-section::after) {
+  background: repeating-linear-gradient(
+    to right,
+    #ffd700 0 3px,
+    transparent 3px 5px
+  ) !important;
+  height: 2.5px !important;
+  z-index: 0 !important;
+  filter: drop-shadow(0 0 6px rgba(255, 215, 0, 1))
+    drop-shadow(0 0 12px rgba(255, 215, 0, 0.9))
+    drop-shadow(0 0 20px rgba(255, 215, 0, 0.7))
+    drop-shadow(0 0 28px rgba(255, 215, 0, 0.5)) !important;
+  opacity: 1 !important;
 }
 
 @keyframes highlightPulse {
   0% {
     transform: scale(1);
-    background-color: rgba(64, 158, 255, 0);
-    box-shadow: 0 0 0 rgba(64, 158, 255, 0);
+    filter: brightness(1);
   }
   50% {
-    transform: scale(1.08);
-    background-color: rgba(64, 158, 255, 0.3);
-    box-shadow: 0 0 20px rgba(64, 158, 255, 0.7);
+    transform: scale(1.05);
+    filter: brightness(1.1);
   }
   100% {
     transform: scale(1);
-    background-color: rgba(64, 158, 255, 0.25);
-    box-shadow: 0 0 12px rgba(64, 158, 255, 0.5);
+    filter: brightness(1);
   }
 }
 
@@ -495,14 +592,6 @@ defineExpose({
     .rice-ul {
       width: 100%;
     }
-  }
-
-  .left-area {
-    /* 左侧区域样式 */
-  }
-
-  .right-area {
-    /* 右侧区域样式 */
   }
 }
 

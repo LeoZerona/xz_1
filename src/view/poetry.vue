@@ -368,7 +368,7 @@ watch(() => selectedPoem.value, (poem) => {
 
 <style lang="scss" scoped>
 .poetry-container {
-  min-height: calc(100vh - 60px);
+  min-height: 100vh;
   padding: 20px;
   padding-top: 80px; // 为固定的 navigation 留出空间（60px navigation + 20px 间距）
   background-color: #f5f6f7;

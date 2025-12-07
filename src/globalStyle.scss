@@ -1,27 +1,81 @@
 body {
   background-color: #f5f6f7;
 }
-/* 滚动条整体样式 */
+
+/* ========== 全局滚动条样式优化 ========== */
+
+/* Webkit 浏览器（Chrome, Safari, Edge）滚动条样式 */
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
 }
 
 /* 滚动条轨道 */
 ::-webkit-scrollbar-track {
-  background: #fff;
-  /* border-radius: 0px; */
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 4px;
 }
 
 /* 滚动条滑块 */
 ::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  transition: background 0.2s ease, width 0.2s ease, height 0.2s ease;
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 
-/* 滚动条滑块hover */
+/* 滚动条滑块悬停状态 */
 ::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid transparent;
+  background-clip: padding-box;
+}
+
+/* 滚动条滑块激活状态 */
+::-webkit-scrollbar-thumb:active {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+/* 滚动条角落 */
+::-webkit-scrollbar-corner {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+/* Firefox 浏览器滚动条样式（标准 CSS） */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.02);
+}
+
+/* 特定元素的滚动条优化 */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.02);
+
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.35);
+  }
+}
+
+/* 隐藏滚动条但保持滚动功能 */
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE 和 Edge */
+  scrollbar-width: none; /* Firefox */
+
+  &::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+  }
 }
 
 @font-face {
@@ -42,7 +96,7 @@ body {
   font-family: 'FangZhengXiaoZhuan', cursive;
 }
 
-/* 移动端全局优化 */
+/* ========== 移动端全局优化 ========== */
 @media (max-width: 768px) {
   /* 移动端滚动条优化 */
   ::-webkit-scrollbar {
@@ -51,7 +105,18 @@ body {
   }
 
   ::-webkit-scrollbar-thumb {
-    border-radius: 6px;
+    border-radius: 3px;
+    background: rgba(0, 0, 0, 0.25);
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.4);
+  }
+
+  /* Firefox 移动端滚动条 */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.25) rgba(0, 0, 0, 0.02);
   }
 
   /* 防止移动端点击延迟 */
@@ -74,8 +139,19 @@ body {
 }
 
 @media (max-width: 480px) {
+  /* 超小屏幕滚动条优化 */
   ::-webkit-scrollbar {
     width: 4px;
     height: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    border-radius: 2px;
+    background: rgba(0, 0, 0, 0.3);
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.3) rgba(0, 0, 0, 0.02);
   }
 }

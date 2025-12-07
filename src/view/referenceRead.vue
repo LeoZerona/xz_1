@@ -12,13 +12,12 @@
     class="reference-read-container"
     :class="{ 'config-open': showConfigDialog }"
   >
-    <!-- 配置按钮 - 固定在右上角 -->
+    <!-- 配置按钮 - 固定在右侧边缘中间 -->
     <el-button
       class="config-button"
-      type="primary"
-      :icon="Setting"
-      circle
-      @click="showConfigDialog = true"
+      :class="{ 'config-open': showConfigDialog }"
+      :icon="showConfigDialog ? Close : Setting"
+      @click="showConfigDialog = !showConfigDialog"
     />
 
     <!-- 进度条 - 固定在左侧 -->
@@ -50,7 +49,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, watch } from "vue";
-import { Setting } from "@element-plus/icons-vue";
+import { Setting, Close } from "@element-plus/icons-vue";
 import TextGrid from "@/components/referenceRead/TextGrid.vue";
 import ProgressBar from "@/components/referenceRead/ProgressBar.vue";
 import ConfigDialog from "@/components/referenceRead/ConfigDialog.vue";
@@ -367,7 +366,7 @@ watch(
 
 <style lang="scss" scoped>
 .reference-read-container {
-  min-height: calc(100vh - 60px);
+  min-height: calc(100vh - 100px);
   padding: 20px;
   padding-top: 80px; // 为固定的 navigation 留出空间（60px navigation + 20px 间距）
   background-color: #f5f6f7;
@@ -377,10 +376,35 @@ watch(
 
   .config-button {
     position: fixed;
-    right: 30px;
-    top: 80px; // 60px navigation + 20px 间距
-    z-index: 100;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1000; // 确保在配置面板之上
+    background-color: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 6px 0 0 6px;
+    box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.08);
+    padding: 0px 5px;
+    height: 40px;
+    color: #606266;
+    transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+      background-color 0.3s ease, color 0.3s ease;
+
+    &:hover {
+      background-color: #f5f7fa;
+      color: #409eff;
+    }
+
+    &.config-open {
+      right: 400px; // 移动到配置面板左侧（面板宽度400px）
+      background-color: #ffffff;
+      color: #909399;
+
+      &:hover {
+        background-color: #f5f7fa;
+        color: #606266;
+      }
+    }
   }
 
   .fixed-progress-bar {
@@ -389,7 +413,7 @@ watch(
     top: 80px; // 60px navigation + 20px 间距
     width: 200px;
     z-index: 100;
-    max-height: calc(100vh - 100px);
+    max-height: calc(100vh - 80px);
     overflow-y: auto;
     overflow-x: hidden;
   }
@@ -411,8 +435,8 @@ watch(
     .text-content {
       max-width: calc(
         100% - 240px - 420px
-      ); // 减去进度条宽度(220px)和抽屉宽度(400px)+间距(20px)
-      margin-right: 420px; // 为右侧抽屉留出空间（400px抽屉 + 20px间距）
+      ); // 减去进度条宽度(220px)和配置面板宽度(400px)+间距(20px)
+      margin-right: 420px; // 为右侧配置面板留出空间（400px面板 + 20px间距）
     }
   }
 }
@@ -421,12 +445,20 @@ watch(
 @media (max-width: 768px) {
   .reference-read-container {
     padding: 15px;
-    padding-top: 70px; // 移动端 navigation 高度（50px）+ 间距（20px）
+    padding-top: 65px; // 移动端 navigation 高度（50px）+ 间距（15px）
     flex-direction: column;
 
     .config-button {
-      right: 20px;
-      top: 70px; // 50px navigation + 20px 间距
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      border-radius: 6px 0 0 6px;
+      padding: 0px 5px;
+      height: 40px;
+
+      &.config-open {
+        right: 90%; // 移动端面板宽度为90%
+      }
     }
 
     .fixed-progress-bar {
@@ -455,7 +487,16 @@ watch(
 @media (max-width: 480px) {
   .reference-read-container {
     padding: 10px;
-    padding-top: 68px; // 超小屏幕 navigation 高度（48px）+ 间距（20px）
+    padding-top: 58px; // 超小屏幕 navigation 高度（48px）+ 间距（10px）
+
+    .config-button {
+      padding: 0px 5px;
+      height: 40px;
+
+      &.config-open {
+        right: 100%; // 超小屏幕面板宽度为100%
+      }
+    }
 
     .fixed-progress-bar {
       margin-bottom: 12px;

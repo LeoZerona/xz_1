@@ -1,18 +1,13 @@
 <template>
-  <el-drawer
-    v-model="visible"
-    direction="rtl"
-    size="400px"
-    :close-on-click-modal="false"
-    :close-on-press-escape="true"
-    :modal="false"
-    :append-to-body="true"
-    :with-header="true"
-    class="config-drawer"
+  <div
+    v-if="visible"
+    class="config-panel-wrapper"
+    :class="{ 'panel-visible': visible }"
   >
-    <template #header>
-      <div class="drawer-header">
-        <span class="drawer-title">对照阅读配置</span>
+    <div class="config-panel-content">
+      <!-- 头部 -->
+      <div class="config-header">
+        <span class="config-title">对照阅读配置</span>
         <el-button
           type="default"
           :icon="RefreshLeft"
@@ -20,237 +15,240 @@
           size="small"
           class="reset-button"
         >
-          恢复为默认设置
+          默认设置
         </el-button>
       </div>
-    </template>
-    <div class="config-container">
-      <!-- 左侧配置区域 -->
-      <div class="config-panel">
-        <el-tabs v-model="activeTab" class="config-tabs">
-          <!-- 功能设置标签页 -->
-          <el-tab-pane label="功能设置" name="function">
-            <div class="tab-content">
-              <div class="config-section">
-                <div class="section-title">
-                  <span class="title-icon">📖</span>
-                  阅读模式
-                </div>
-                <el-radio-group
-                  v-model="config.readMode"
-                  @change="updatePreview"
-                  class="radio-group-horizontal"
-                >
-                  <el-radio label="vertical">单行上下对照</el-radio>
-                  <el-radio label="horizontal">左右布局阅读</el-radio>
-                </el-radio-group>
-              </div>
 
-              <div class="config-section">
-                <div class="section-title">
-                  <span class="title-icon">🔤</span>
-                  对照的字体
-                </div>
-                <div class="font-selector-group">
-                  <div class="font-selector-item">
-                    <span class="font-label">第一排：</span>
-                    <div class="font-selector-wrapper">
-                      <font-selector
-                        v-model="config.firstFont"
-                        @change="updatePreview"
-                      />
-                    </div>
+      <!-- 配置内容 -->
+      <div class="config-container">
+        <!-- 左侧配置区域 -->
+        <div class="config-panel">
+          <el-tabs v-model="activeTab" class="config-tabs">
+            <!-- 功能设置标签页 -->
+            <el-tab-pane label="功能设置" name="function">
+              <div class="tab-content">
+                <div class="config-section">
+                  <div class="section-title">
+                    <span class="title-icon">📖</span>
+                    阅读模式
                   </div>
-                  <div class="font-selector-item">
-                    <span class="font-label">第二排：</span>
-                    <div class="font-selector-wrapper">
-                      <font-selector
-                        v-model="config.secondFont"
-                        @change="updatePreview"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="config-section">
-                <div class="section-title">
-                  <span class="title-icon">📚</span>
-                  学习内容
-                </div>
-                <el-select
-                  v-model="config.contentId"
-                  placeholder="请选择学习内容"
-                  filterable
-                  clearable
-                  @change="handleContentChange"
-                  class="full-width-select"
-                >
-                  <el-option
-                    v-for="item in classicalTexts"
-                    :key="item.id"
-                    :label="`${item.title} - ${item.author}`"
-                    :value="item.id"
+                  <el-radio-group
+                    v-model="config.readMode"
+                    @change="updatePreview"
+                    class="radio-group-horizontal"
                   >
-                    <div class="content-option">
-                      <div class="content-title">{{ item.title }}</div>
-                      <div class="content-meta">
-                        <span class="author">{{ item.author }}</span>
-                        <span class="category">{{ item.category }}</span>
+                    <el-radio label="vertical">单行上下对照</el-radio>
+                    <el-radio label="horizontal">左右布局阅读</el-radio>
+                  </el-radio-group>
+                </div>
+
+                <div class="config-section">
+                  <div class="section-title">
+                    <span class="title-icon">🔤</span>
+                    对照的字体
+                  </div>
+                  <div class="font-selector-group">
+                    <div class="font-selector-item">
+                      <span class="font-label">第一排：</span>
+                      <div class="font-selector-wrapper">
+                        <font-selector
+                          v-model="config.firstFont"
+                          @change="updatePreview"
+                        />
                       </div>
                     </div>
-                  </el-option>
-                </el-select>
-              </div>
-
-              <div class="config-section">
-                <div class="section-title">
-                  <span class="title-icon">⚙️</span>
-                  功能模式
-                </div>
-                <el-radio-group
-                  v-model="config.functionMode"
-                  @change="updatePreview"
-                  class="radio-group-horizontal"
-                >
-                  <el-radio label="compare">对照阅读模式</el-radio>
-                  <el-radio label="learn">学习模式</el-radio>
-                </el-radio-group>
-              </div>
-
-              <div
-                class="config-section"
-                v-if="config.functionMode === 'learn'"
-              >
-                <div class="section-title">
-                  <span class="title-icon">⌨️</span>
-                  操作模式
-                </div>
-                <el-radio-group
-                  v-model="config.operationMode"
-                  @change="updatePreview"
-                  class="radio-group-horizontal"
-                >
-                  <el-radio label="keyboard">方向键操控</el-radio>
-                  <el-radio label="typing">打字模式</el-radio>
-                </el-radio-group>
-              </div>
-            </div>
-          </el-tab-pane>
-
-          <!-- 稿纸设置标签页 -->
-          <el-tab-pane label="稿纸设置" name="paper">
-            <div class="tab-content">
-              <div class="config-section paper-config-section">
-                <div class="section-title">
-                  <span class="title-icon">📄</span>
-                  阅读稿纸设置
-                </div>
-                <div class="paper-config">
-                  <div class="paper-item">
-                    <div class="paper-label-wrapper">
-                      <div class="paper-label">稿纸样式：</div>
-                    </div>
-                    <div class="paper-options-wrapper">
-                      <el-radio-group
-                        v-model="config.gridType"
-                        @change="updatePreview"
-                        class="paper-radio-group-with-preview"
-                      >
-                        <el-radio label="tian" class="radio-with-preview">
-                          <div class="grid-preview-small">
-                            <paper-grid
-                              grid-type="tian"
-                              :show-pinyin="
-                                config.showOptions.includes('pinyin')
-                              "
-                              :pinyin="
-                                config.showOptions.includes('pinyin')
-                                  ? 'xué'
-                                  : ''
-                              "
-                              :cell-size="25"
-                              class="preview-grid-cell"
-                            >
-                              字
-                            </paper-grid>
-                          </div>
-                          <span class="radio-label">田字格</span>
-                        </el-radio>
-                        <el-radio label="mi" class="radio-with-preview">
-                          <div class="grid-preview-small">
-                            <paper-grid
-                              grid-type="mi"
-                              :show-pinyin="
-                                config.showOptions.includes('pinyin')
-                              "
-                              :pinyin="
-                                config.showOptions.includes('pinyin')
-                                  ? 'xué'
-                                  : ''
-                              "
-                              :cell-size="25"
-                              class="preview-grid-cell"
-                            >
-                              字
-                            </paper-grid>
-                          </div>
-                          <span class="radio-label">米字格</span>
-                        </el-radio>
-                        <el-radio label="none" class="radio-with-preview">
-                          <div class="grid-preview-small">
-                            <paper-grid
-                              grid-type="none"
-                              :show-pinyin="
-                                config.showOptions.includes('pinyin')
-                              "
-                              :pinyin="
-                                config.showOptions.includes('pinyin')
-                                  ? 'xué'
-                                  : ''
-                              "
-                              :cell-size="25"
-                              class="preview-grid-cell"
-                            >
-                              字
-                            </paper-grid>
-                          </div>
-                          <span class="radio-label">无格</span>
-                        </el-radio>
-                      </el-radio-group>
-                    </div>
-                  </div>
-                  <div class="paper-item">
-                    <div class="paper-label-wrapper">
-                      <div class="paper-label">显示选项：</div>
-                    </div>
-                    <div class="paper-options-wrapper">
-                      <el-checkbox-group
-                        v-model="config.showOptions"
-                        @change="updatePreview"
-                        class="paper-checkbox-group"
-                      >
-                        <el-checkbox label="pinyin">拼音</el-checkbox>
-                      </el-checkbox-group>
+                    <div class="font-selector-item">
+                      <span class="font-label">第二排：</span>
+                      <div class="font-selector-wrapper">
+                        <font-selector
+                          v-model="config.secondFont"
+                          @change="updatePreview"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
+
+                <div class="config-section">
+                  <div class="section-title">
+                    <span class="title-icon">📚</span>
+                    学习内容
+                  </div>
+                  <el-select
+                    v-model="config.contentId"
+                    placeholder="请选择学习内容"
+                    filterable
+                    clearable
+                    @change="handleContentChange"
+                    class="full-width-select"
+                  >
+                    <el-option
+                      v-for="item in classicalTexts"
+                      :key="item.id"
+                      :label="`${item.title} - ${item.author}`"
+                      :value="item.id"
+                    >
+                      <div class="content-option">
+                        <div class="content-title">{{ item.title }}</div>
+                        <div class="content-meta">
+                          <span class="author">{{ item.author }}</span>
+                          <span class="category">{{ item.category }}</span>
+                        </div>
+                      </div>
+                    </el-option>
+                  </el-select>
+                </div>
+
+                <div class="config-section">
+                  <div class="section-title">
+                    <span class="title-icon">⚙️</span>
+                    功能模式
+                  </div>
+                  <el-radio-group
+                    v-model="config.functionMode"
+                    @change="updatePreview"
+                    class="radio-group-horizontal"
+                  >
+                    <el-radio label="compare">对照阅读模式</el-radio>
+                    <el-radio label="learn">学习模式</el-radio>
+                  </el-radio-group>
+                </div>
+
+                <div
+                  class="config-section"
+                  v-if="config.functionMode === 'learn'"
+                >
+                  <div class="section-title">
+                    <span class="title-icon">⌨️</span>
+                    操作模式
+                  </div>
+                  <el-radio-group
+                    v-model="config.operationMode"
+                    @change="updatePreview"
+                    class="radio-group-horizontal"
+                  >
+                    <el-radio label="keyboard">方向键操控</el-radio>
+                    <el-radio label="typing">打字模式</el-radio>
+                  </el-radio-group>
+                </div>
               </div>
-            </div>
-          </el-tab-pane>
-        </el-tabs>
+            </el-tab-pane>
+
+            <!-- 稿纸设置标签页 -->
+            <el-tab-pane label="稿纸设置" name="paper">
+              <div class="tab-content">
+                <div class="config-section paper-config-section">
+                  <div class="section-title">
+                    <span class="title-icon">📄</span>
+                    阅读稿纸设置
+                  </div>
+                  <div class="paper-config">
+                    <div class="paper-item">
+                      <div class="paper-label-wrapper">
+                        <div class="paper-label">稿纸样式：</div>
+                      </div>
+                      <div class="paper-options-wrapper">
+                        <el-radio-group
+                          v-model="config.gridType"
+                          @change="updatePreview"
+                          class="paper-radio-group-with-preview"
+                        >
+                          <el-radio label="tian" class="radio-with-preview">
+                            <div class="grid-preview-small">
+                              <paper-grid
+                                grid-type="tian"
+                                :show-pinyin="
+                                  config.showOptions.includes('pinyin')
+                                "
+                                :pinyin="
+                                  config.showOptions.includes('pinyin')
+                                    ? 'xué'
+                                    : ''
+                                "
+                                :cell-size="25"
+                                class="preview-grid-cell"
+                              >
+                                字
+                              </paper-grid>
+                            </div>
+                            <span class="radio-label">田字格</span>
+                          </el-radio>
+                          <el-radio label="mi" class="radio-with-preview">
+                            <div class="grid-preview-small">
+                              <paper-grid
+                                grid-type="mi"
+                                :show-pinyin="
+                                  config.showOptions.includes('pinyin')
+                                "
+                                :pinyin="
+                                  config.showOptions.includes('pinyin')
+                                    ? 'xué'
+                                    : ''
+                                "
+                                :cell-size="25"
+                                class="preview-grid-cell"
+                              >
+                                字
+                              </paper-grid>
+                            </div>
+                            <span class="radio-label">米字格</span>
+                          </el-radio>
+                          <el-radio label="none" class="radio-with-preview">
+                            <div class="grid-preview-small">
+                              <paper-grid
+                                grid-type="none"
+                                :show-pinyin="
+                                  config.showOptions.includes('pinyin')
+                                "
+                                :pinyin="
+                                  config.showOptions.includes('pinyin')
+                                    ? 'xué'
+                                    : ''
+                                "
+                                :cell-size="25"
+                                class="preview-grid-cell"
+                              >
+                                字
+                              </paper-grid>
+                            </div>
+                            <span class="radio-label">无格</span>
+                          </el-radio>
+                        </el-radio-group>
+                      </div>
+                    </div>
+                    <div class="paper-item">
+                      <div class="paper-label-wrapper">
+                        <div class="paper-label">显示选项：</div>
+                      </div>
+                      <div class="paper-options-wrapper">
+                        <el-checkbox-group
+                          v-model="config.showOptions"
+                          @change="updatePreview"
+                          class="paper-checkbox-group"
+                        >
+                          <el-checkbox label="pinyin">拼音</el-checkbox>
+                        </el-checkbox-group>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </el-tab-pane>
+          </el-tabs>
+        </div>
+      </div>
+
+      <!-- 底部按钮 -->
+      <div class="config-footer">
+        <el-button @click="handleCancel">取消</el-button>
+        <el-button type="primary" @click="handleConfirm">确认</el-button>
       </div>
     </div>
-
-    <div class="drawer-footer">
-      <el-button @click="handleCancel">取消</el-button>
-      <el-button type="primary" @click="handleConfirm">确认</el-button>
-    </div>
-  </el-drawer>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, nextTick } from "vue";
+import { ref, computed, watch, onMounted } from "vue";
 import { RefreshLeft } from "@element-plus/icons-vue";
 import FontSelector from "./FontSelector.vue";
 import PaperGrid from "./PaperGrid.vue";
@@ -350,33 +348,18 @@ const handleCancel = () => {
   visible.value = false;
 };
 
-// 恢复为默认设置
+// 默认设置
 const handleResetToDefault = () => {
   config.value = { ...defaultConfig };
   previewText.value = "学而时习之，不亦说乎？有朋自远方来，不亦乐乎？";
   updatePreview();
 };
 
-// 监听对话框关闭，清理唯一标识类
+// 监听面板显示/隐藏，加载配置
 watch(visible, (newVal) => {
-  if (!newVal) {
-    // 关闭时清理 class，避免影响其他组件
-    nextTick(() => {
-      const drawer = document.querySelector(".reference-read-config-drawer");
-      const overlay = document.querySelector(".reference-read-config-overlay");
-      if (drawer) {
-        drawer.classList.remove("reference-read-config-drawer");
-      }
-      if (overlay) {
-        overlay.classList.remove("reference-read-config-overlay");
-      }
-    });
-    return;
-  }
-
   if (newVal) {
     loadClassicalTexts();
-    // 可以在这里加载保存的配置，如果没有保存的配置，则使用默认配置
+    // 加载保存的配置，如果没有保存的配置，则使用默认配置
     const savedConfig = localStorage.getItem("referenceReadConfig");
     if (savedConfig) {
       try {
@@ -399,56 +382,6 @@ watch(visible, (newVal) => {
       config.value = { ...defaultConfig };
     }
     updatePreview();
-
-    // 动态设置抽屉样式，确保不覆盖导航栏，并添加唯一标识类
-    // 使用 setTimeout 确保 drawer 已经渲染到 DOM 中
-    setTimeout(() => {
-      // 查找所有 drawer，找到当前组件打开的 drawer
-      const allDrawers = document.querySelectorAll(".el-drawer.rtl");
-      const allOverlays = document.querySelectorAll(".el-overlay");
-
-      // 找到最近打开的 drawer（通常是最后一个，且包含 config-drawer 相关的元素）
-      // 通过查找包含 "对照阅读配置" 文本的 drawer 来确认
-      let targetDrawer: HTMLElement | null = null;
-      let targetOverlay: HTMLElement | null = null;
-
-      for (let i = allDrawers.length - 1; i >= 0; i--) {
-        const drawer = allDrawers[i] as HTMLElement;
-        // 检查 drawer 中是否包含当前组件的特定内容
-        if (
-          drawer
-            .querySelector(".drawer-title")
-            ?.textContent?.includes("对照阅读配置")
-        ) {
-          targetDrawer = drawer;
-          break;
-        }
-      }
-
-      // 如果没找到，使用最后一个 drawer（假设是当前打开的）
-      if (!targetDrawer && allDrawers.length > 0) {
-        targetDrawer = allDrawers[allDrawers.length - 1] as HTMLElement;
-      }
-
-      // 找到对应的 overlay（通常是 drawer 的兄弟元素或父元素的子元素）
-      if (targetDrawer && allOverlays.length > 0) {
-        // overlay 通常在 drawer 之前
-        const drawerIndex = Array.from(allDrawers).indexOf(targetDrawer);
-        if (drawerIndex < allOverlays.length) {
-          targetOverlay = allOverlays[drawerIndex] as HTMLElement;
-        } else if (allOverlays.length > 0) {
-          targetOverlay = allOverlays[allOverlays.length - 1] as HTMLElement;
-        }
-      }
-
-      // 添加唯一标识类
-      if (targetDrawer) {
-        targetDrawer.classList.add("reference-read-config-drawer");
-      }
-      if (targetOverlay) {
-        targetOverlay.classList.add("reference-read-config-overlay");
-      }
-    }, 100);
   }
 });
 
@@ -458,83 +391,97 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
-.config-drawer {
-  :deep(.el-drawer) {
-    z-index: 999 !important; // 低于导航栏的 z-index: 1000
-    position: fixed !important;
-    right: 0 !important;
-    top: 60px !important; // 从导航栏下方开始显示
-    height: calc(100vh - 60px) !important; // 减去导航栏高度
-    box-shadow: none !important; // 移除阴影
+.config-panel-wrapper {
+  position: fixed;
+  right: 0;
+  top: 60px; // 从导航栏下方开始
+  width: 400px;
+  height: calc(100vh - 60px);
+  z-index: 999; // 低于导航栏的 z-index: 1000
+  background: linear-gradient(to bottom, #ffffff 0%, #fafbfc 100%);
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.08), -2px 0 8px rgba(0, 0, 0, 0.04);
+  transform: translateX(100%);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid rgba(0, 0, 0, 0.06);
+
+  &.panel-visible {
+    transform: translateX(0);
+  }
+}
+
+.config-panel-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.config-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 20px 20px 20px;
+  background: linear-gradient(to bottom, #ffffff 0%, #f8f9fa 100%);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  flex-shrink: 0;
+  backdrop-filter: blur(10px);
+
+  .config-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1a1a1a;
+    flex: 1;
+    letter-spacing: -0.3px;
   }
 
-  :deep(.el-drawer.rtl) {
-    z-index: 999 !important;
-    position: fixed !important;
-    right: 0 !important;
-    top: 60px !important;
-    height: calc(100vh - 60px) !important;
-    box-shadow: none !important; // 移除阴影
-  }
+  .reset-button {
+    flex-shrink: 0;
+    transition: all 0.2s ease;
 
-  :deep(.el-drawer__header) {
-    margin-bottom: 20px;
-    padding: 20px 20px 0 20px;
-    position: relative;
-    z-index: 1;
-  }
-
-  :deep(.el-overlay) {
-    z-index: 998 !important; // 低于抽屉，确保在导航栏下方
-    background-color: transparent !important;
-    pointer-events: none !important;
-    top: 60px !important; // 从导航栏下方开始
-    height: calc(100vh - 60px) !important; // 减去导航栏高度
-  }
-
-  :deep(.el-drawer__body) {
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
   }
 }
 
 .config-container {
   flex: 1;
   overflow-y: auto;
-}
+  overflow-x: hidden;
+  padding: 0 20px;
 
-.drawer-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  position: relative;
-  z-index: 1;
-
-  .drawer-title {
-    font-size: 18px;
-    font-weight: 600;
-    color: #303133;
-    flex: 1;
+  // 自定义滚动条样式
+  &::-webkit-scrollbar {
+    width: 6px;
   }
 
-  .reset-button {
-    flex-shrink: 0;
-    position: relative;
-    z-index: 1;
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 3px;
+    transition: background 0.2s ease;
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.3);
+    }
   }
 }
 
-.drawer-footer {
+.config-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
-  padding-top: 20px;
-  border-top: 1px solid #e4e7ed;
-  margin-top: 20px;
+  gap: 12px;
+  padding: 20px;
+  background: linear-gradient(to top, #ffffff 0%, #fafbfc 100%);
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
   flex-shrink: 0;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.02);
 }
 
 .config-panel {
@@ -550,7 +497,32 @@ onMounted(() => {
     overflow: hidden;
 
     :deep(.el-tabs__header) {
-      margin: 0 0 16px 0;
+      margin: 0 0 20px 0;
+      padding: 0 4px;
+    }
+
+    :deep(.el-tabs__nav-wrap::after) {
+      background-color: rgba(0, 0, 0, 0.06);
+    }
+
+    :deep(.el-tabs__item) {
+      font-weight: 500;
+      color: #606266;
+      transition: all 0.2s ease;
+
+      &:hover {
+        color: #409eff;
+      }
+
+      &.is-active {
+        color: #409eff;
+        font-weight: 600;
+      }
+    }
+
+    :deep(.el-tabs__active-bar) {
+      background-color: #409eff;
+      height: 3px;
     }
 
     :deep(.el-tabs__content) {
@@ -565,50 +537,79 @@ onMounted(() => {
   }
 
   .tab-content {
-    padding: 0;
+    padding: 4px 0;
   }
 
   .config-section {
-    margin-bottom: 24px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid #f0f0f0;
+    margin-bottom: 28px;
+    padding: 20px;
+    padding-bottom: 24px;
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.04);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    transition: all 0.2s ease;
+
+    &:hover {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      border-color: rgba(64, 158, 255, 0.2);
+    }
 
     &:last-child {
-      border-bottom: none;
       margin-bottom: 0;
-      padding-bottom: 0;
     }
 
     .section-title {
       display: flex;
       align-items: center;
-      font-size: 15px;
-      font-weight: 600;
-      color: #303133;
-      margin-bottom: 16px;
-      padding-bottom: 8px;
+      font-size: 16px;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
       border-bottom: 2px solid #409eff;
+      position: relative;
+
+      &::after {
+        content: "";
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        width: 40px;
+        height: 2px;
+        background: linear-gradient(to right, #409eff, rgba(64, 158, 255, 0.3));
+      }
 
       .title-icon {
-        font-size: 18px;
-        margin-right: 8px;
+        font-size: 20px;
+        margin-right: 10px;
+        filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
       }
     }
 
     .font-selector-group {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 16px;
 
       .font-selector-item {
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 10px;
+        padding: 12px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+
+        &:hover {
+          background: #f0f2f5;
+        }
 
         .font-label {
           font-size: 14px;
           color: #606266;
-          font-weight: 500;
+          font-weight: 600;
+          letter-spacing: 0.2px;
         }
 
         .font-selector-wrapper {
@@ -664,20 +665,24 @@ onMounted(() => {
               margin: 0;
               height: auto;
               line-height: normal;
-              border: none;
-              border-radius: 0;
-              padding: 10px 12px;
-              transition: all 0.3s;
+              border: 1px solid rgba(0, 0, 0, 0.08);
+              border-radius: 8px;
+              padding: 12px;
+              transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
               cursor: pointer;
               display: flex;
               align-items: center;
               flex: 0 0 auto;
               box-sizing: border-box;
               margin-bottom: 0;
-              background-color: transparent;
+              background: #ffffff;
+              box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 
               &:hover {
-                background-color: transparent;
+                background: #f8f9fa;
+                border-color: rgba(64, 158, 255, 0.4);
+                box-shadow: 0 2px 6px rgba(64, 158, 255, 0.15);
+                transform: translateY(-1px);
               }
 
               .el-radio__input {
@@ -706,11 +711,22 @@ onMounted(() => {
                   display: flex;
                   align-items: center;
                   justify-content: center;
-                  padding: 4px;
-                  background-color: #fff;
-                  border-radius: 4px;
-                  border: 1px solid #e4e7ed;
+                  padding: 6px;
+                  background: linear-gradient(
+                    to bottom,
+                    #ffffff 0%,
+                    #fafbfc 100%
+                  );
+                  border-radius: 8px;
+                  border: 1px solid rgba(0, 0, 0, 0.08);
                   flex-shrink: 0;
+                  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+                  transition: all 0.2s ease;
+
+                  &:hover {
+                    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+                    border-color: rgba(64, 158, 255, 0.3);
+                  }
 
                   .preview-grid-cell {
                     margin: 0;
@@ -719,7 +735,13 @@ onMounted(() => {
               }
 
               &.is-checked {
-                background-color: transparent;
+                background: linear-gradient(
+                  to bottom,
+                  #ecf5ff 0%,
+                  #e1f0ff 100%
+                );
+                border-color: #409eff;
+                box-shadow: 0 2px 8px rgba(64, 158, 255, 0.25);
               }
             }
           }
@@ -762,61 +784,113 @@ onMounted(() => {
 }
 
 .content-option {
+  padding: 4px 0;
+
   .content-title {
     font-size: 14px;
-    font-weight: 500;
-    color: #303133;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 6px;
   }
 
   .content-meta {
     font-size: 12px;
     color: #909399;
-    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 
     .author {
-      margin-right: 10px;
+      padding: 2px 8px;
+      background: #f0f2f5;
+      border-radius: 4px;
+      font-weight: 500;
     }
 
     .category {
       color: #409eff;
+      font-weight: 500;
+      padding: 2px 8px;
+      background: rgba(64, 158, 255, 0.1);
+      border-radius: 4px;
     }
   }
 }
 
 /* 移动端适配 */
 @media (max-width: 768px) {
-  .config-drawer {
-    :deep(.el-drawer) {
-      width: 90% !important;
+  .config-panel-wrapper {
+    width: 90%;
+    top: 50px; // 移动端 navigation 高度
+    height: calc(100vh - 50px);
+    box-shadow: -4px 0 24px rgba(0, 0, 0, 0.12);
+  }
+
+  .config-header {
+    padding: 20px 16px 16px 16px;
+
+    .config-title {
+      font-size: 18px;
     }
   }
 
   .config-container {
+    padding: 0 16px;
     flex-direction: column;
     gap: 20px;
+  }
+
+  .config-section {
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+
+  .config-footer {
+    padding: 16px;
   }
 
   .config-panel {
     padding-bottom: 20px;
   }
 }
-</style>
 
-<style lang="scss">
-// 使用唯一的 class 名称限定样式作用范围，只影响当前组件的 drawer
-// 这样不会影响其他组件中的 drawer
-.reference-read-config-drawer {
-  top: 60px !important;
-  height: calc(100vh - 60px) !important;
-  z-index: 999 !important;
-  position: fixed !important;
-  box-shadow: none !important; // 移除阴影
-}
+@media (max-width: 480px) {
+  .config-panel-wrapper {
+    width: 100%;
+    top: 48px; // 超小屏幕 navigation 高度
+    height: calc(100vh - 48px);
+  }
 
-// 遮罩层也要调整，只针对当前组件的遮罩层
-.reference-read-config-overlay {
-  top: 60px !important;
-  height: calc(100vh - 60px) !important;
-  z-index: 998 !important;
+  .config-header {
+    padding: 16px;
+
+    .config-title {
+      font-size: 16px;
+    }
+  }
+
+  .config-container {
+    padding: 0 12px;
+  }
+
+  .config-section {
+    padding: 12px;
+    margin-bottom: 16px;
+    border-radius: 8px;
+
+    .section-title {
+      font-size: 15px;
+      margin-bottom: 16px;
+    }
+  }
+
+  .config-footer {
+    padding: 12px;
+    flex-direction: column;
+
+    .el-button {
+      width: 100%;
+    }
+  }
 }
 </style>

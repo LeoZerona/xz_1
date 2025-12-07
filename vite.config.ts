@@ -50,6 +50,15 @@ export default defineConfig({
 		}
 	},
   server: {
+    // 优化 HMR 连接，减少动态导入失败的问题
+    hmr: {
+      overlay: true,
+    },
+    // 增加文件系统监听选项
+    watch: {
+      usePolling: false,
+      interval: 100,
+    },
     proxy: {
       "/api": {
         // 匹配请求路径
@@ -65,6 +74,11 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/api/, ""),
       },
     },
+  },
+  // 优化构建配置，减少动态导入问题
+  optimizeDeps: {
+    include: ['vue', 'vue-router'],
+    exclude: [],
   },
   build: {
     outDir: 'dist',
