@@ -62,11 +62,22 @@
         >
           <!-- 拼音显示（在输入时） -->
           <div v-if="isComposing && composingText" class="pinyin-display">
-            <span class="pinyin-text">{{ composingText }}</span>
+            <span class="pinyin-text">{{
+              composingText.slice(0, composingCursorPos)
+            }}</span>
             <span class="pinyin-cursor"></span>
+            <span class="pinyin-text">{{
+              composingText.slice(composingCursorPos)
+            }}</span>
           </div>
-          <!-- 普通光标（未输入时） -->
-          <div v-else class="typing-cursor-indicator cursor-blink" />
+          <!-- 普通光标（未输入时或在已输入文字的右边） -->
+          <div
+            v-else
+            class="typing-cursor-indicator cursor-blink"
+            :class="{
+              'cursor-after-text': cursorAtRight && typingInputs.has(i),
+            }"
+          />
         </div>
       </paper-grid>
     </li>
@@ -82,6 +93,10 @@
     @compositionstart="handleCompositionStart"
     @compositionupdate="handleCompositionUpdate"
     @compositionend="handleCompositionEnd"
+    @keydown="handleHiddenInputKeyDown"
+    @keyup="handleHiddenInputKeyUp"
+    @click="updateComposingCursorPos"
+    @select="updateComposingCursorPos"
     @blur="
       () => {
         if (isTypingMode) {
@@ -169,11 +184,22 @@
             >
               <!-- 拼音显示（在输入时） -->
               <div v-if="isComposing && composingText" class="pinyin-display">
-                <span class="pinyin-text">{{ composingText }}</span>
+                <span class="pinyin-text">{{
+                  composingText.slice(0, composingCursorPos)
+                }}</span>
                 <span class="pinyin-cursor"></span>
+                <span class="pinyin-text">{{
+                  composingText.slice(composingCursorPos)
+                }}</span>
               </div>
-              <!-- 普通光标（未输入时） -->
-              <div v-else class="typing-cursor-indicator cursor-blink" />
+              <!-- 普通光标（未输入时或在已输入文字的右边） -->
+              <div
+                v-else
+                class="typing-cursor-indicator cursor-blink"
+                :class="{
+                  'cursor-after-text': cursorAtRight && typingInputs.has(i),
+                }"
+              />
             </div>
           </paper-grid>
         </li>
@@ -246,6 +272,9 @@ const typingStatus = ref<Map<number, boolean | null>>(new Map());
 // 打字模式：用户输入的内容
 const typingInputs = ref<Map<number, string>>(new Map());
 
+// 打字模式：光标位置状态（true=在字符右侧，false=在字符左侧）
+const cursorAtRight = ref<boolean>(false);
+
 // 打字模式：光标闪烁状态
 const cursorVisible = ref<boolean>(true);
 
@@ -257,6 +286,7 @@ const isTypingMode = computed(() => {
 // 中文输入法状态
 const isComposing = ref<boolean>(false);
 const composingText = ref<string>(""); // 当前输入的拼音内容
+const composingCursorPos = ref<number>(0); // 拼音输入框内的光标位置
 const hiddenInputRef = ref<HTMLInputElement | null>(null);
 
 const update = () => {
@@ -431,6 +461,7 @@ watch(
       typingPosition.value = 0;
       typingStatus.value.clear();
       typingInputs.value.clear();
+      cursorAtRight.value = false;
       startCursorBlink();
       // 监听滚动事件
       window.addEventListener("scroll", handleScroll, { passive: true });
@@ -447,6 +478,7 @@ watch(
       typingPosition.value = 0;
       typingStatus.value.clear();
       typingInputs.value.clear();
+      cursorAtRight.value = false;
       if (hiddenInputRef.value) {
         hiddenInputRef.value.blur();
       }
@@ -463,6 +495,7 @@ watch(
       typingPosition.value = 0;
       typingStatus.value.clear();
       typingInputs.value.clear();
+      cursorAtRight.value = false;
       nextTick(() => {
         scrollToIndex(0);
       });
@@ -507,6 +540,8 @@ const handleCellClick = (index: number) => {
   // 如果是学习模式且是打字模式，跳转到该位置并聚焦输入框，但不显示放大动画
   if (props.functionMode === "learn" && props.operationMode === "typing") {
     typingPosition.value = index;
+    // 根据当前位置是否有输入决定光标位置
+    cursorAtRight.value = typingInputs.value.has(index);
     scrollToIndex(index);
     // 聚焦隐藏输入框
     nextTick(() => {
@@ -610,6 +645,8 @@ const handleInput = (event: Event) => {
 
     // 更新位置
     typingPosition.value = Math.min(currentPos, props.text.length);
+    // 输入后光标在右侧
+    cursorAtRight.value = true;
 
     // 滚动到当前位置并更新输入框位置
     if (typingPosition.value < props.text.length) {
@@ -632,6 +669,15 @@ const handleInput = (event: Event) => {
 const handleCompositionStart = () => {
   isComposing.value = true;
   composingText.value = "";
+  composingCursorPos.value = 0;
+};
+
+// 更新拼音光标位置
+const updateComposingCursorPos = () => {
+  if (!hiddenInputRef.value || !isComposing.value) {
+    return;
+  }
+  composingCursorPos.value = hiddenInputRef.value.selectionStart || 0;
 };
 
 // 处理组合输入更新（中文输入法）- 显示拼音
@@ -641,6 +687,10 @@ const handleCompositionUpdate = (event: CompositionEvent) => {
   const input = event.target as HTMLInputElement;
   // 获取拼音内容（可能是input.value或event.data）
   composingText.value = event.data || input.value || "";
+  // 更新光标位置
+  nextTick(() => {
+    updateComposingCursorPos();
+  });
 };
 
 // 处理组合输入结束（中文输入法）
@@ -678,6 +728,8 @@ const handleCompositionEnd = (event: CompositionEvent) => {
 
     // 更新位置
     typingPosition.value = Math.min(currentPos, props.text.length);
+    // 输入后光标在右侧
+    cursorAtRight.value = true;
 
     // 滚动到当前位置并更新输入框位置
     if (typingPosition.value < props.text.length) {
@@ -696,6 +748,27 @@ const handleCompositionEnd = (event: CompositionEvent) => {
   }
 };
 
+// 处理隐藏输入框的键盘事件（用于在composition状态下编辑拼音）
+const handleHiddenInputKeyDown = (event: KeyboardEvent) => {
+  // 在composition状态下，允许所有编辑键正常使用
+  if (isComposing.value) {
+    // 不阻止任何键，让输入框正常处理方向键等
+    return;
+  }
+  // 非composition状态下，阻止默认行为，由handleTypingInput处理
+  if (event.key === "Backspace") {
+    event.preventDefault();
+  }
+};
+
+// 处理隐藏输入框的键盘释放事件（用于更新光标位置）
+const handleHiddenInputKeyUp = () => {
+  // 在composition状态下，更新光标位置
+  if (isComposing.value) {
+    updateComposingCursorPos();
+  }
+};
+
 // 处理键盘输入事件（打字模式）- 处理退格等特殊键
 const handleTypingInput = (event: KeyboardEvent) => {
   // 只在学习模式且打字模式下处理
@@ -703,18 +776,44 @@ const handleTypingInput = (event: KeyboardEvent) => {
     return;
   }
 
-  // 如果正在输入中文，不处理
+  // 如果正在输入中文（composition状态），允许方向键传递给输入框以编辑拼音
   if (isComposing.value) {
+    // 在composition状态下，方向键应该传递给输入框，不阻止默认行为
+    if (
+      event.key === "ArrowLeft" ||
+      event.key === "ArrowRight" ||
+      event.key === "ArrowUp" ||
+      event.key === "ArrowDown" ||
+      event.key === "Home" ||
+      event.key === "End"
+    ) {
+      // 允许输入框处理这些键，用于编辑拼音
+      return;
+    }
     return;
   }
 
   // 处理退格键
   if (event.key === "Backspace") {
-    if (typingPosition.value > 0) {
-      typingPosition.value--;
-      typingStatus.value.delete(typingPosition.value);
-      typingInputs.value.delete(typingPosition.value);
-      scrollToIndex(typingPosition.value);
+    const currentPos = typingPosition.value;
+    const hasInput = typingInputs.value.has(currentPos);
+
+    if (cursorAtRight.value && hasInput) {
+      // 光标在右侧且有输入：删除当前位置的字符，光标移动到当前格子的左侧
+      typingStatus.value.delete(currentPos);
+      typingInputs.value.delete(currentPos);
+      cursorAtRight.value = false; // 光标移动到当前格子的左侧
+      // 不改变位置，保持在当前格子
+    } else {
+      // 光标在左侧或当前位置没有输入：删除上一个字符，光标移动到上一个方格的左侧
+      if (currentPos > 0) {
+        const prevPos = currentPos - 1;
+        typingStatus.value.delete(prevPos);
+        typingInputs.value.delete(prevPos);
+        typingPosition.value = prevPos;
+        cursorAtRight.value = false; // 光标在左侧
+        scrollToIndex(typingPosition.value);
+      }
     }
     // 清空隐藏输入框
     if (hiddenInputRef.value) {
@@ -724,13 +823,14 @@ const handleTypingInput = (event: KeyboardEvent) => {
     return;
   }
 
-  // 忽略方向键（在打字模式下）
+  // 如果不在composition状态，处理方向键切换格子
   if (
     event.key === "ArrowLeft" ||
     event.key === "ArrowRight" ||
     event.key === "ArrowUp" ||
     event.key === "ArrowDown"
   ) {
+    // 允许方向键切换格子（在handleKeyDown中处理）
     return;
   }
 
@@ -742,8 +842,81 @@ const handleTypingInput = (event: KeyboardEvent) => {
 
 // 处理键盘方向键事件
 const handleKeyDown = (event: KeyboardEvent) => {
-  // 如果是打字模式，先处理打字输入
+  // 如果是打字模式
   if (isTypingMode.value) {
+    // 如果正在输入中文（composition状态），不处理方向键切换
+    if (isComposing.value) {
+      handleTypingInput(event);
+      return;
+    }
+
+    // 处理方向键切换格子（在非composition状态下）
+    if (
+      event.key === "ArrowLeft" ||
+      event.key === "ArrowRight" ||
+      event.key === "ArrowUp" ||
+      event.key === "ArrowDown"
+    ) {
+      const currentPos = typingPosition.value;
+      const textLength = props.text.length;
+      let newPos = currentPos;
+
+      switch (event.key) {
+        case "ArrowLeft":
+          if (cursorAtRight.value && typingInputs.value.has(currentPos)) {
+            // 如果光标在右侧，先移动到左侧
+            cursorAtRight.value = false;
+          } else if (currentPos > 0) {
+            // 如果光标在左侧，移动到上一个字符
+            newPos = currentPos - 1;
+            cursorAtRight.value = typingInputs.value.has(newPos); // 根据上一个字符是否有输入决定光标位置
+          }
+          break;
+        case "ArrowRight":
+          if (!cursorAtRight.value && typingInputs.value.has(currentPos)) {
+            // 如果光标在左侧且有输入，移动到右侧
+            cursorAtRight.value = true;
+          } else if (currentPos < textLength) {
+            // 如果光标在右侧，移动到下一个字符
+            newPos = Math.min(currentPos + 1, textLength);
+            cursorAtRight.value = false; // 新位置光标在左侧
+          }
+          break;
+        case "ArrowUp":
+          // 向上移动到上一行
+          if (currentPos >= perRow.value) {
+            newPos = Math.max(0, currentPos - perRow.value);
+          }
+          break;
+        case "ArrowDown":
+          // 向下移动到下一行
+          if (currentPos < textLength - perRow.value) {
+            newPos = Math.min(textLength, currentPos + perRow.value);
+          } else if (currentPos < textLength) {
+            // 如果不在最后一行，移动到行尾
+            const currentRow = Math.floor(currentPos / perRow.value);
+            const lastRowStart = currentRow * perRow.value;
+            const lastRowEnd = Math.min(
+              lastRowStart + perRow.value,
+              textLength
+            );
+            newPos = Math.min(
+              currentPos + (lastRowEnd - currentPos),
+              textLength
+            );
+          }
+          break;
+      }
+
+      if (newPos !== currentPos) {
+        typingPosition.value = newPos;
+        scrollToIndex(newPos);
+        event.preventDefault();
+      }
+      return;
+    }
+
+    // 其他按键交给handleTypingInput处理
     handleTypingInput(event);
     return;
   }
@@ -1076,6 +1249,7 @@ const resetTyping = () => {
   typingPosition.value = 0;
   typingStatus.value.clear();
   typingInputs.value.clear();
+  cursorAtRight.value = false;
   nextTick(() => {
     scrollToIndex(0);
   });
@@ -1439,22 +1613,23 @@ defineExpose({
   align-items: center;
   gap: 4px;
   background-color: rgba(255, 255, 255, 0.98);
-  padding: 4px 8px;
+  padding: 4px 12px;
   border-radius: 4px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
   border: 1px solid #dcdfe6;
   white-space: nowrap;
   z-index: 101;
-  max-width: 95%;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  min-width: fit-content;
+  max-width: none;
+  overflow: visible;
 }
 
-/* 拼音文本 - 放大到肉眼可见 */
+/* 拼音文本 - 放大到肉眼可见，使用固定字体 */
 .pinyin-text {
   font-size: 22px;
   color: #303133;
-  font-family: "Microsoft YaHei", "SimHei", "Arial", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC",
+    "Microsoft YaHei", "Segoe UI", Arial, sans-serif;
   line-height: 1.3;
   font-weight: 600;
 }
@@ -1493,6 +1668,13 @@ defineExpose({
   border-radius: 1px;
   pointer-events: none;
   animation: cursorBlink 1.06s ease-in-out infinite;
+  transition: left 0.1s ease, right 0.1s ease;
+}
+
+/* 光标在文字右边 - 当有输入文字时 */
+.typing-cursor-indicator.cursor-after-text {
+  left: auto;
+  right: 2px;
 }
 
 @keyframes cursorBlink {
