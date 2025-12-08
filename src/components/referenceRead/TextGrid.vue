@@ -333,6 +333,39 @@ const stopCursorBlink = () => {
   cursorVisible.value = true;
 };
 
+// 处理滚动事件，更新输入框位置
+const handleScroll = () => {
+  if (
+    isTypingMode.value &&
+    hiddenInputRef.value &&
+    typingPosition.value < props.text.length
+  ) {
+    // 找到当前输入位置的元素
+    const currentIndex = typingPosition.value;
+    let element: HTMLElement | null = null;
+
+    if (props.layoutMode === "vertical") {
+      element = document.querySelector(
+        `.cell.lower[data-char-index="${currentIndex}"]`
+      ) as HTMLElement;
+    } else {
+      element = document.querySelector(
+        `.cell.right[data-char-index="${currentIndex}"]`
+      ) as HTMLElement;
+    }
+
+    if (!element) {
+      element = document.querySelector(
+        `[data-char-index="${currentIndex}"]`
+      ) as HTMLElement;
+    }
+
+    if (element) {
+      updateInputPosition(element);
+    }
+  }
+};
+
 onMounted(() => {
   update();
   window.addEventListener("resize", update);
@@ -342,9 +375,10 @@ onMounted(() => {
   }
   // 监听键盘事件
   window.addEventListener("keydown", handleKeyDown);
-  // 如果是打字模式，启动光标闪烁并聚焦隐藏输入框
+  // 如果是打字模式，启动光标闪烁并聚焦隐藏输入框，并监听滚动事件
   if (isTypingMode.value) {
     startCursorBlink();
+    window.addEventListener("scroll", handleScroll, { passive: true });
     nextTick(() => {
       if (hiddenInputRef.value) {
         // 先定位到第一个字符位置
@@ -364,6 +398,7 @@ onBeforeUnmount(() => {
   window.removeEventListener("resize", update);
   document.removeEventListener("selectionchange", handleSelectionChange);
   window.removeEventListener("keydown", handleKeyDown);
+  window.removeEventListener("scroll", handleScroll);
   // 清理定时器
   if (clickTimer) {
     clearTimeout(clickTimer);
@@ -397,6 +432,8 @@ watch(
       typingStatus.value.clear();
       typingInputs.value.clear();
       startCursorBlink();
+      // 监听滚动事件
+      window.addEventListener("scroll", handleScroll, { passive: true });
       // 滚动到起始位置并聚焦隐藏输入框
       nextTick(() => {
         scrollToIndex(0);
@@ -406,6 +443,7 @@ watch(
       });
     } else {
       stopCursorBlink();
+      window.removeEventListener("scroll", handleScroll);
       typingPosition.value = 0;
       typingStatus.value.clear();
       typingInputs.value.clear();
@@ -877,9 +915,18 @@ const scrollToIndex = (index: number) => {
         inline: "center",
       });
 
-      // 如果是打字模式，更新输入框位置
+      // 如果是打字模式，等待滚动完成后再更新输入框位置
       if (isTypingMode.value && hiddenInputRef.value) {
-        updateInputPosition(element);
+        // 平滑滚动是异步的，需要等待滚动完成
+        // 使用 requestAnimationFrame 等待几帧，确保元素位置已更新
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            // 再次等待一帧，确保滚动动画完成
+            requestAnimationFrame(() => {
+              updateInputPosition(element!);
+            });
+          });
+        });
       }
     }
   });
