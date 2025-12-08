@@ -6,6 +6,7 @@
     class="rice-ul"
     :class="{ 'grid-none': gridType === 'none' }"
     @copy="handleCopy"
+    @click="handleContainerClick"
   >
     <li v-for="(ch, i) in textArr" :key="i" class="col">
       <!-- 上层：字体 A -->
@@ -19,8 +20,10 @@
         :data-char-index="i"
         :class="{
           highlighted: isHighlighted(i),
-          'interactive-highlight': interactiveIndex === i,
+          'interactive-highlight': interactiveIndex === i && !isTypingMode,
           'keyboard-selected': isKeyboardSelected(i),
+          'typing-correct': isTypingCorrect(i),
+          'typing-error': isTypingError(i),
         }"
         :style="{ fontFamily: firstFont }"
         @click="handleCellClick(i)"
@@ -38,20 +41,63 @@
         :data-char-index="i"
         :class="{
           highlighted: isHighlighted(i),
-          'interactive-highlight': interactiveIndex === i,
+          'interactive-highlight': interactiveIndex === i && !isTypingMode,
           'show-second-font': shouldShowSecondFont(i),
           'keyboard-selected': isKeyboardSelected(i),
+          'typing-cursor': isTypingCursor(i),
+          'typing-correct': isTypingCorrect(i),
+          'typing-error': isTypingError(i),
+          'typing-has-input': typingInputs.has(i),
         }"
         :style="{ fontFamily: secondFont }"
         @click="handleCellClick(i)"
       >
-        {{ ch }}
+        <span class="typing-input-text">{{
+          typingInputs.get(i) || (isTypingMode ? "" : ch)
+        }}</span>
+        <!-- 打字模式光标和拼音显示 -->
+        <div
+          v-if="isTypingMode && isTypingCursor(i)"
+          class="typing-cursor-container"
+        >
+          <!-- 拼音显示（在输入时） -->
+          <div v-if="isComposing && composingText" class="pinyin-display">
+            <span class="pinyin-text">{{ composingText }}</span>
+            <span class="pinyin-cursor"></span>
+          </div>
+          <!-- 普通光标（未输入时） -->
+          <div v-else class="typing-cursor-indicator cursor-blink" />
+        </div>
       </paper-grid>
     </li>
   </ul>
 
+  <!-- 隐藏的输入框用于捕获中文输入 -->
+  <input
+    v-if="isTypingMode"
+    ref="hiddenInputRef"
+    type="text"
+    class="hidden-input"
+    @input="handleInput"
+    @compositionstart="handleCompositionStart"
+    @compositionupdate="handleCompositionUpdate"
+    @compositionend="handleCompositionEnd"
+    @blur="
+      () => {
+        if (isTypingMode) {
+          hiddenInputRef?.focus();
+        }
+      }
+    "
+  />
+
   <!-- 左右布局模式 -->
-  <div v-else class="horizontal-layout" @copy="handleCopy">
+  <div
+    v-else
+    class="horizontal-layout"
+    @copy="handleCopy"
+    @click="handleContainerClick"
+  >
     <!-- 左侧区域：字体 A（楷体） -->
     <div class="text-area left-area">
       <ul
@@ -70,8 +116,10 @@
             :data-char-index="i"
             :class="{
               highlighted: isHighlighted(i),
-              'interactive-highlight': interactiveIndex === i,
+              'interactive-highlight': interactiveIndex === i && !isTypingMode,
               'keyboard-selected': isKeyboardSelected(i),
+              'typing-correct': isTypingCorrect(i),
+              'typing-error': isTypingError(i),
             }"
             :style="{ fontFamily: firstFont }"
             @click="handleCellClick(i)"
@@ -100,14 +148,33 @@
             :data-char-index="i"
             :class="{
               highlighted: isHighlighted(i),
-              'interactive-highlight': interactiveIndex === i,
+              'interactive-highlight': interactiveIndex === i && !isTypingMode,
               'show-second-font': shouldShowSecondFont(i),
               'keyboard-selected': isKeyboardSelected(i),
+              'typing-cursor': isTypingCursor(i),
+              'typing-correct': isTypingCorrect(i),
+              'typing-error': isTypingError(i),
+              'typing-has-input': typingInputs.has(i),
             }"
             :style="{ fontFamily: secondFont }"
             @click="handleCellClick(i)"
           >
-            {{ ch }}
+            <span class="typing-input-text">{{
+              typingInputs.get(i) || (isTypingMode ? "" : ch)
+            }}</span>
+            <!-- 打字模式光标和拼音显示 -->
+            <div
+              v-if="isTypingMode && isTypingCursor(i)"
+              class="typing-cursor-container"
+            >
+              <!-- 拼音显示（在输入时） -->
+              <div v-if="isComposing && composingText" class="pinyin-display">
+                <span class="pinyin-text">{{ composingText }}</span>
+                <span class="pinyin-cursor"></span>
+              </div>
+              <!-- 普通光标（未输入时） -->
+              <div v-else class="typing-cursor-indicator cursor-blink" />
+            </div>
           </paper-grid>
         </li>
       </ul>
@@ -116,7 +183,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from "vue";
+import {
+  ref,
+  computed,
+  onMounted,
+  onBeforeUnmount,
+  watch,
+  nextTick,
+} from "vue";
 import PaperGrid from "./PaperGrid.vue";
 
 interface Props {
@@ -162,6 +236,28 @@ const selectedIndex = ref<number | null>(null);
 
 // 方向键操控模式：显示第二行字体的字符索引集合
 const visibleSecondFonts = ref<Set<number>>(new Set());
+
+// 打字模式：当前输入位置索引
+const typingPosition = ref<number>(0);
+
+// 打字模式：已输入字符的状态（true=正确, false=错误, null=未输入）
+const typingStatus = ref<Map<number, boolean | null>>(new Map());
+
+// 打字模式：用户输入的内容
+const typingInputs = ref<Map<number, string>>(new Map());
+
+// 打字模式：光标闪烁状态
+const cursorVisible = ref<boolean>(true);
+
+// 打字模式：是否启用
+const isTypingMode = computed(() => {
+  return props.functionMode === "learn" && props.operationMode === "typing";
+});
+
+// 中文输入法状态
+const isComposing = ref<boolean>(false);
+const composingText = ref<string>(""); // 当前输入的拼音内容
+const hiddenInputRef = ref<HTMLInputElement | null>(null);
 
 const update = () => {
   if (props.layoutMode === "vertical") {
@@ -219,6 +315,24 @@ const handleSelectionChange = () => {
   }
 };
 
+// 光标闪烁动画
+let cursorBlinkTimer: number | null = null;
+
+const startCursorBlink = () => {
+  if (cursorBlinkTimer) return;
+  cursorBlinkTimer = window.setInterval(() => {
+    cursorVisible.value = !cursorVisible.value;
+  }, 530); // Windows系统标准光标闪烁时间：530ms
+};
+
+const stopCursorBlink = () => {
+  if (cursorBlinkTimer) {
+    clearInterval(cursorBlinkTimer);
+    cursorBlinkTimer = null;
+  }
+  cursorVisible.value = true;
+};
+
 onMounted(() => {
   update();
   window.addEventListener("resize", update);
@@ -228,6 +342,22 @@ onMounted(() => {
   }
   // 监听键盘事件
   window.addEventListener("keydown", handleKeyDown);
+  // 如果是打字模式，启动光标闪烁并聚焦隐藏输入框
+  if (isTypingMode.value) {
+    startCursorBlink();
+    nextTick(() => {
+      if (hiddenInputRef.value) {
+        // 先定位到第一个字符位置
+        const firstElement = document.querySelector(
+          `[data-char-index="0"]`
+        ) as HTMLElement;
+        if (firstElement) {
+          updateInputPosition(firstElement);
+        }
+        hiddenInputRef.value.focus();
+      }
+    });
+  }
 });
 
 onBeforeUnmount(() => {
@@ -239,6 +369,8 @@ onBeforeUnmount(() => {
     clearTimeout(clickTimer);
     clickTimer = null;
   }
+  // 清理光标闪烁定时器
+  stopCursorBlink();
 });
 
 // 监听布局模式变化，动态添加/移除选择监听
@@ -251,6 +383,51 @@ watch(
       document.removeEventListener("selectionchange", handleSelectionChange);
       // 上下布局模式切换时不清除高亮，让用户可以看到点击效果
       // interactiveIndex.value = null;
+    }
+  }
+);
+
+// 监听打字模式变化
+watch(
+  () => isTypingMode.value,
+  (isTyping) => {
+    if (isTyping) {
+      // 重置打字状态
+      typingPosition.value = 0;
+      typingStatus.value.clear();
+      typingInputs.value.clear();
+      startCursorBlink();
+      // 滚动到起始位置并聚焦隐藏输入框
+      nextTick(() => {
+        scrollToIndex(0);
+        if (hiddenInputRef.value) {
+          hiddenInputRef.value.focus();
+        }
+      });
+    } else {
+      stopCursorBlink();
+      typingPosition.value = 0;
+      typingStatus.value.clear();
+      typingInputs.value.clear();
+      if (hiddenInputRef.value) {
+        hiddenInputRef.value.blur();
+      }
+    }
+  },
+  { immediate: true }
+);
+
+// 监听文本变化，重置打字状态
+watch(
+  () => props.text,
+  () => {
+    if (isTypingMode.value) {
+      typingPosition.value = 0;
+      typingStatus.value.clear();
+      typingInputs.value.clear();
+      nextTick(() => {
+        scrollToIndex(0);
+      });
     }
   }
 );
@@ -277,14 +454,38 @@ const isHighlighted = (index: number) => {
 /* ===== 处理单元格交互事件（左右布局模式和上下布局模式） ===== */
 let clickTimer: number | null = null;
 
+// 处理容器点击事件（聚焦隐藏输入框）
+const handleContainerClick = (event: MouseEvent) => {
+  // 如果点击的不是单元格，且是打字模式，聚焦输入框
+  const target = event.target as HTMLElement;
+  if (isTypingMode.value && !target.closest(".cell")) {
+    if (hiddenInputRef.value) {
+      hiddenInputRef.value.focus();
+    }
+  }
+};
+
 const handleCellClick = (index: number) => {
+  // 如果是学习模式且是打字模式，跳转到该位置并聚焦输入框，但不显示放大动画
+  if (props.functionMode === "learn" && props.operationMode === "typing") {
+    typingPosition.value = index;
+    scrollToIndex(index);
+    // 聚焦隐藏输入框
+    nextTick(() => {
+      if (hiddenInputRef.value) {
+        hiddenInputRef.value.focus();
+      }
+    });
+    return;
+  }
+
   // 清除之前的定时器
   if (clickTimer) {
     clearTimeout(clickTimer);
     clickTimer = null;
   }
   interactiveIndex.value = index;
-  
+
   // 如果是学习模式且是方向键操控模式，只记录选中的索引，不显示第二行字体
   if (props.functionMode === "learn" && props.operationMode === "keyboard") {
     selectedIndex.value = index;
@@ -292,7 +493,7 @@ const handleCellClick = (index: number) => {
     // 滚动到可见区域
     scrollToIndex(index);
   }
-  
+
   // 点击后保持高亮一段时间
   clickTimer = window.setTimeout(() => {
     // 检查是否还有文本选择（仅左右布局模式）
@@ -324,30 +525,204 @@ const getRowIndexes = (index: number): number[] => {
 // 检查指定索引所在行的所有字符是否都已经显示
 const isRowAllVisible = (index: number): boolean => {
   const rowIndexes = getRowIndexes(index);
-  return rowIndexes.length > 0 && rowIndexes.every((idx) => visibleSecondFonts.value.has(idx));
+  return (
+    rowIndexes.length > 0 &&
+    rowIndexes.every((idx) => visibleSecondFonts.value.has(idx))
+  );
 };
 
 // 检查指定索引所在行的所有字符是否都已经隐藏
 const isRowAllHidden = (index: number): boolean => {
   const rowIndexes = getRowIndexes(index);
-  return rowIndexes.length > 0 && rowIndexes.every((idx) => !visibleSecondFonts.value.has(idx));
+  return (
+    rowIndexes.length > 0 &&
+    rowIndexes.every((idx) => !visibleSecondFonts.value.has(idx))
+  );
+};
+
+// 处理输入事件（打字模式）- 支持中文输入和多个字符输入
+const handleInput = (event: Event) => {
+  if (!isTypingMode.value || isComposing.value) {
+    return;
+  }
+
+  const input = event.target as HTMLInputElement;
+  const inputValue = input.value;
+
+  if (inputValue.length > 0) {
+    // 将输入的字符逐个处理
+    const inputChars = Array.from(inputValue);
+    let currentPos = typingPosition.value;
+
+    for (
+      let i = 0;
+      i < inputChars.length && currentPos < props.text.length;
+      i++
+    ) {
+      const inputChar = inputChars[i];
+      const currentChar = props.text[currentPos];
+      const isCorrect = inputChar === currentChar;
+
+      // 记录输入内容和状态
+      typingInputs.value.set(currentPos, inputChar);
+      typingStatus.value.set(currentPos, isCorrect);
+
+      currentPos++;
+    }
+
+    // 更新位置
+    typingPosition.value = Math.min(currentPos, props.text.length);
+
+    // 滚动到当前位置并更新输入框位置
+    if (typingPosition.value < props.text.length) {
+      scrollToIndex(typingPosition.value);
+    } else if (
+      typingPosition.value >= props.text.length &&
+      props.text.length > 0
+    ) {
+      // 如果已经到达末尾，定位到最后一个字符
+      const lastIndex = props.text.length - 1;
+      scrollToIndex(lastIndex);
+    }
+
+    // 清空输入框
+    input.value = "";
+  }
+};
+
+// 处理组合输入开始（中文输入法）
+const handleCompositionStart = () => {
+  isComposing.value = true;
+  composingText.value = "";
+};
+
+// 处理组合输入更新（中文输入法）- 显示拼音
+const handleCompositionUpdate = (event: CompositionEvent) => {
+  if (!isTypingMode.value) return;
+
+  const input = event.target as HTMLInputElement;
+  // 获取拼音内容（可能是input.value或event.data）
+  composingText.value = event.data || input.value || "";
+};
+
+// 处理组合输入结束（中文输入法）
+const handleCompositionEnd = (event: CompositionEvent) => {
+  isComposing.value = false;
+  composingText.value = "";
+
+  if (!isTypingMode.value) {
+    return;
+  }
+
+  const input = event.target as HTMLInputElement;
+  const inputValue = input.value;
+
+  if (inputValue.length > 0) {
+    // 将输入的字符逐个处理（支持多个字符）
+    const inputChars = Array.from(inputValue);
+    let currentPos = typingPosition.value;
+
+    for (
+      let i = 0;
+      i < inputChars.length && currentPos < props.text.length;
+      i++
+    ) {
+      const inputChar = inputChars[i];
+      const currentChar = props.text[currentPos];
+      const isCorrect = inputChar === currentChar;
+
+      // 记录输入内容和状态
+      typingInputs.value.set(currentPos, inputChar);
+      typingStatus.value.set(currentPos, isCorrect);
+
+      currentPos++;
+    }
+
+    // 更新位置
+    typingPosition.value = Math.min(currentPos, props.text.length);
+
+    // 滚动到当前位置并更新输入框位置
+    if (typingPosition.value < props.text.length) {
+      scrollToIndex(typingPosition.value);
+    } else if (
+      typingPosition.value >= props.text.length &&
+      props.text.length > 0
+    ) {
+      // 如果已经到达末尾，定位到最后一个字符
+      const lastIndex = props.text.length - 1;
+      scrollToIndex(lastIndex);
+    }
+
+    // 清空输入框
+    input.value = "";
+  }
+};
+
+// 处理键盘输入事件（打字模式）- 处理退格等特殊键
+const handleTypingInput = (event: KeyboardEvent) => {
+  // 只在学习模式且打字模式下处理
+  if (!isTypingMode.value) {
+    return;
+  }
+
+  // 如果正在输入中文，不处理
+  if (isComposing.value) {
+    return;
+  }
+
+  // 处理退格键
+  if (event.key === "Backspace") {
+    if (typingPosition.value > 0) {
+      typingPosition.value--;
+      typingStatus.value.delete(typingPosition.value);
+      typingInputs.value.delete(typingPosition.value);
+      scrollToIndex(typingPosition.value);
+    }
+    // 清空隐藏输入框
+    if (hiddenInputRef.value) {
+      hiddenInputRef.value.value = "";
+    }
+    event.preventDefault();
+    return;
+  }
+
+  // 忽略方向键（在打字模式下）
+  if (
+    event.key === "ArrowLeft" ||
+    event.key === "ArrowRight" ||
+    event.key === "ArrowUp" ||
+    event.key === "ArrowDown"
+  ) {
+    return;
+  }
+
+  // 聚焦到隐藏输入框以捕获输入
+  if (hiddenInputRef.value && event.key.length === 1) {
+    hiddenInputRef.value.focus();
+  }
 };
 
 // 处理键盘方向键事件
 const handleKeyDown = (event: KeyboardEvent) => {
+  // 如果是打字模式，先处理打字输入
+  if (isTypingMode.value) {
+    handleTypingInput(event);
+    return;
+  }
+
   // 只在学习模式且方向键操控模式下处理
   if (props.functionMode !== "learn" || props.operationMode !== "keyboard") {
     return;
   }
-  
+
   // 如果没有选中任何字符，不处理
   if (selectedIndex.value === null) {
     return;
   }
-  
+
   const currentIndex = selectedIndex.value;
   const textLength = props.text.length;
-  
+
   switch (event.key) {
     case "ArrowLeft":
       // 左键：隐藏当前字符的第二行字体（回撤）
@@ -455,20 +830,122 @@ const isKeyboardSelected = (index: number) => {
   );
 };
 
+// 检查是否是打字模式的光标位置
+const isTypingCursor = (index: number) => {
+  return isTypingMode.value && typingPosition.value === index;
+};
+
+// 检查是否是打字模式中正确的字符
+const isTypingCorrect = (index: number) => {
+  return isTypingMode.value && typingStatus.value.get(index) === true;
+};
+
+// 检查是否是打字模式中错误的字符
+const isTypingError = (index: number) => {
+  return isTypingMode.value && typingStatus.value.get(index) === false;
+};
+
 // 滚动到指定索引的字符
 const scrollToIndex = (index: number) => {
   nextTick(() => {
-    const element = document.querySelector(
-      `[data-char-index="${index}"]`
-    ) as HTMLElement;
+    // 在打字模式下，优先使用下层格子（拼音显示的位置）
+    let element: HTMLElement | null = null;
+
+    if (isTypingMode.value && props.layoutMode === "vertical") {
+      // 上下布局：使用下层格子
+      element = document.querySelector(
+        `.cell.lower[data-char-index="${index}"]`
+      ) as HTMLElement;
+    } else if (isTypingMode.value && props.layoutMode === "horizontal") {
+      // 左右布局：使用右侧格子
+      element = document.querySelector(
+        `.cell.right[data-char-index="${index}"]`
+      ) as HTMLElement;
+    }
+
+    // 如果找不到，使用通用选择器
+    if (!element) {
+      element = document.querySelector(
+        `[data-char-index="${index}"]`
+      ) as HTMLElement;
+    }
+
     if (element) {
       element.scrollIntoView({
         behavior: "smooth",
         block: "center",
         inline: "center",
       });
+
+      // 如果是打字模式，更新输入框位置
+      if (isTypingMode.value && hiddenInputRef.value) {
+        updateInputPosition(element);
+      }
     }
   });
+};
+
+// 更新输入框位置到当前输入位置的下方（直接根据显示拼音的元素定位）
+const updateInputPosition = (element: HTMLElement) => {
+  if (!hiddenInputRef.value) return;
+
+  // 获取当前字符索引
+  const currentIndex = parseInt(element.getAttribute("data-char-index") || "0");
+
+  // 直接找到显示拼音的元素（下层格子或右侧格子）
+  let pinyinElement: HTMLElement | null = null;
+  let alignElement: HTMLElement | null = null; // 用于对齐的元素（上层格子或左侧格子）
+
+  if (props.layoutMode === "vertical") {
+    // 上下布局：拼音显示在下层格子
+    pinyinElement = document.querySelector(
+      `.cell.lower[data-char-index="${currentIndex}"]`
+    ) as HTMLElement;
+    // 使用上层格子进行对齐
+    alignElement = document.querySelector(
+      `.cell.upper[data-char-index="${currentIndex}"]`
+    ) as HTMLElement;
+  } else {
+    // 左右布局：拼音显示在右侧格子
+    pinyinElement = document.querySelector(
+      `.cell.right[data-char-index="${currentIndex}"]`
+    ) as HTMLElement;
+    // 使用左侧格子进行对齐
+    alignElement = document.querySelector(
+      `.cell.left[data-char-index="${currentIndex}"]`
+    ) as HTMLElement;
+  }
+
+  // 如果找不到拼音元素，使用当前元素
+  if (!pinyinElement) {
+    pinyinElement = element;
+  }
+
+  const pinyinRect = pinyinElement.getBoundingClientRect();
+
+  // 使用 fixed 定位时，getBoundingClientRect() 返回的是相对于视口的位置，直接使用即可
+  // 定位到拼音显示元素的底部下方，固定间距
+  const spacing = -30; // 间距，可以调整这个值
+  const targetTop = pinyinRect.bottom + spacing;
+
+  // 使用对齐元素的位置和宽度（如果存在），否则使用拼音元素
+  let targetLeft: number;
+  let targetWidth: number;
+
+  if (alignElement) {
+    const alignRect = alignElement.getBoundingClientRect();
+    targetLeft = alignRect.left;
+    targetWidth = alignRect.width;
+  } else {
+    targetLeft = pinyinRect.left;
+    targetWidth = pinyinRect.width;
+  }
+
+  hiddenInputRef.value.style.position = "fixed";
+  hiddenInputRef.value.style.left = `${targetLeft}px`;
+  hiddenInputRef.value.style.top = `${targetTop}px`;
+  hiddenInputRef.value.style.width = `${targetWidth}px`;
+  hiddenInputRef.value.style.height = "1px";
 };
 
 /* ===== 处理复制事件，避免重复复制 ===== */
@@ -547,12 +1024,23 @@ const resetVisibleFonts = () => {
   selectedIndex.value = null;
 };
 
+// 重置打字模式
+const resetTyping = () => {
+  typingPosition.value = 0;
+  typingStatus.value.clear();
+  typingInputs.value.clear();
+  nextTick(() => {
+    scrollToIndex(0);
+  });
+};
+
 defineExpose({
   update,
   wrapEl,
   leftWrapEl,
   rightWrapEl,
   resetVisibleFonts,
+  resetTyping,
 });
 </script>
 
@@ -730,11 +1218,26 @@ defineExpose({
   -moz-user-select: text;
   -ms-user-select: text;
   transition: color 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 /* 显示第二行字体 */
 .lower.show-second-font {
   color: #333 !important;
+}
+
+/* 打字模式：有输入内容时显示 */
+.lower.typing-has-input {
+  color: #333 !important;
+}
+
+/* 打字模式输入文字 - 显示在格子正中间 */
+.typing-input-text {
+  display: block;
+  text-align: center;
 }
 
 /* 键盘选中状态的视觉指示器 */
@@ -747,8 +1250,7 @@ defineExpose({
 .cell.keyboard-selected :deep(.paper-grid) {
   border-color: #409eff !important;
   border-width: 3px !important;
-  box-shadow: 0 0 20px rgba(64, 158, 255, 0.6),
-    0 0 40px rgba(64, 158, 255, 0.4),
+  box-shadow: 0 0 20px rgba(64, 158, 255, 0.6), 0 0 40px rgba(64, 158, 255, 0.4),
     inset 0 0 10px rgba(64, 158, 255, 0.2) !important;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
@@ -783,6 +1285,11 @@ defineExpose({
   animation: fadeInRight 0.3s ease-out;
 }
 
+/* 打字模式：有输入内容时显示 */
+.right.typing-has-input {
+  opacity: 1;
+}
+
 @keyframes fadeInRight {
   from {
     opacity: 0.7;
@@ -795,10 +1302,6 @@ defineExpose({
 }
 
 /* 应用字体样式到内部文字 - 确保字体能够传递到 PaperGrid 内部的文字内容 */
-.cell {
-  /* 字体样式会通过 style 绑定传递到 PaperGrid，然后继承到内部文字 */
-}
-
 .cell :deep(.character-section) {
   font-family: inherit;
 }
@@ -849,6 +1352,171 @@ defineExpose({
 /* 无格模式：左右无间隙 */
 .rice-ul.grid-none {
   gap: 0;
+}
+
+/* 打字模式样式 */
+/* 隐藏输入框 - 定位到当前输入位置的下方 */
+.hidden-input {
+  position: fixed;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: auto;
+  z-index: 1000;
+  caret-color: transparent;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+}
+
+/* 光标容器 */
+.typing-cursor-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 100;
+}
+
+/* 拼音显示容器 - 显示在格子上半部分 */
+.pinyin-display {
+  position: absolute;
+  top: 8%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background-color: rgba(255, 255, 255, 0.98);
+  padding: 4px 8px;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  border: 1px solid #dcdfe6;
+  white-space: nowrap;
+  z-index: 101;
+  max-width: 95%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 拼音文本 - 放大到肉眼可见 */
+.pinyin-text {
+  font-size: 22px;
+  color: #303133;
+  font-family: "Microsoft YaHei", "SimHei", "Arial", sans-serif;
+  line-height: 1.3;
+  font-weight: 600;
+}
+
+/* 拼音后面的小光标 */
+.pinyin-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 22px;
+  background-color: #000000;
+  animation: pinyinCursorBlink 1.06s ease-in-out infinite;
+  vertical-align: middle;
+  margin-left: 2px;
+}
+
+@keyframes pinyinCursorBlink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* 光标指示器 - 在格子内部左侧，黑色闪烁（Windows标准530ms） */
+.typing-cursor-indicator {
+  position: absolute;
+  top: 50%;
+  left: 2px;
+  transform: translateY(-50%);
+  width: 2px;
+  height: 80%;
+  background-color: #000000;
+  border-radius: 1px;
+  pointer-events: none;
+  animation: cursorBlink 1.06s ease-in-out infinite;
+}
+
+@keyframes cursorBlink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* 打字模式光标位置高亮 */
+.cell.typing-cursor {
+  position: relative;
+  z-index: 20;
+}
+
+.cell.typing-cursor :deep(.paper-grid) {
+  border-color: #409eff !important;
+  border-width: 2px !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+/* 打字模式正确字符 - 绿色（无发光效果） */
+.cell.typing-correct {
+  color: #67c23a !important;
+}
+
+.cell.typing-correct :deep(.paper-grid) {
+  border-color: #67c23a !important;
+  border-width: 2px !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+.cell.typing-correct :deep(.character-section) {
+  color: #67c23a !important;
+  text-shadow: none !important;
+  filter: none !important;
+}
+
+/* 打字模式错误字符 - 红色（无发光效果） */
+.cell.typing-error {
+  color: #f56c6c !important;
+}
+
+.cell.typing-error :deep(.paper-grid) {
+  border-color: #f56c6c !important;
+  border-width: 2px !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+.cell.typing-error :deep(.character-section) {
+  color: #f56c6c !important;
+  text-shadow: none !important;
+  filter: none !important;
+}
+
+/* 打字模式下鼠标悬停显示文本输入光标 */
+.cell.lower.typing-cursor,
+.cell.right.typing-cursor {
+  cursor: text;
+}
+
+.cell.lower:hover,
+.cell.right:hover {
+  cursor: text;
 }
 
 /* 左右布局模式 */

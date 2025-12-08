@@ -27,9 +27,9 @@
         :total-count="text.length"
         :reading-time="readingTime"
       />
-      <!-- 重置按钮 - 只在学习模式且方向键操控模式下显示 -->
+      <!-- 重置按钮 - 在学习模式下显示 -->
       <el-button
-        v-if="functionMode === 'learn' && operationMode === 'keyboard'"
+        v-if="functionMode === 'learn'"
         class="reset-button"
         type="warning"
         size="small"
@@ -258,15 +258,23 @@ const loadArticle = async (articleId: string) => {
 //   }
 // };
 
-/* ===== 字体大小重置 ===== */
-// 保留函数以备将来使用
-// 重置功能：清除所有显示的第二行字体
+/* ===== 重置功能 ===== */
 const handleReset = () => {
-  if (
-    textGridRef.value &&
-    typeof textGridRef.value.resetVisibleFonts === "function"
+  if (!textGridRef.value) return;
+
+  // 如果是打字模式，重置打字状态
+  if (functionMode.value === "learn" && operationMode.value === "typing") {
+    if (typeof textGridRef.value.resetTyping === "function") {
+      textGridRef.value.resetTyping();
+    }
+  } else if (
+    functionMode.value === "learn" &&
+    operationMode.value === "keyboard"
   ) {
-    textGridRef.value.resetVisibleFonts();
+    // 如果是方向键操控模式，重置显示的第二行字体
+    if (typeof textGridRef.value.resetVisibleFonts === "function") {
+      textGridRef.value.resetVisibleFonts();
+    }
   }
 };
 
@@ -477,7 +485,7 @@ watch(
 
   .text-content {
     flex: 1;
-    max-width: 1200px;
+    max-width: 2000px;
     margin-left: 220px;
     margin-right: auto;
     background-color: #fff;
