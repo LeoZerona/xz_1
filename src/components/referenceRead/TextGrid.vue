@@ -1640,7 +1640,7 @@ defineExpose({
   overflow: visible;
 }
 
-/* 拼音文本 - 放大到肉眼可见，使用固定字体 */
+/* 拼音文本 - 放大到肉眼可见，使用固定字体，增加字母间距 */
 .pinyin-text {
   font-size: 22px;
   color: #303133;
@@ -1648,17 +1648,20 @@ defineExpose({
     "Microsoft YaHei", "Segoe UI", Arial, sans-serif;
   line-height: 1.3;
   font-weight: 600;
+  letter-spacing: 0.136em; /* 字母间距 = 光标宽度(2px) + 1px = 3px，3px/22px ≈ 0.136em */
 }
 
-/* 拼音后面的小光标 */
+/* 拼音光标 - 使用负边距避免挤占字母位置 */
 .pinyin-cursor {
   display: inline-block;
-  width: 2px;
+  width: 2px; /* 光标宽度：2px（可在此处调整） */
   height: 22px;
   background-color: #000000;
-  animation: pinyinCursorBlink 1.06s ease-in-out infinite;
+  animation: pinyinCursorBlink 1.06s easei infinite;
   vertical-align: middle;
-  margin-left: 2px;
+  margin-left: -0.072em; /* 负边距，让光标位于字母间隙中（3px间距的一半，约0.068em） */
+  margin-right: -0.072em; /* 负边距，让光标位于字母间隙中 */
+  flex-shrink: 0; /* 防止光标被压缩 */
 }
 
 @keyframes pinyinCursorBlink {
