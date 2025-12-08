@@ -615,7 +615,18 @@ const isRowAllHidden = (index: number): boolean => {
 
 // 处理输入事件（打字模式）- 支持中文输入和多个字符输入
 const handleInput = (event: Event) => {
-  if (!isTypingMode.value || isComposing.value) {
+  if (!isTypingMode.value) {
+    return;
+  }
+
+  // 如果在 composition 状态下，更新光标位置
+  if (isComposing.value) {
+    // 使用 requestAnimationFrame 确保在浏览器更新后获取准确的光标位置
+    requestAnimationFrame(() => {
+      if (hiddenInputRef.value && isComposing.value) {
+        composingCursorPos.value = hiddenInputRef.value.selectionStart || 0;
+      }
+    });
     return;
   }
 
@@ -677,7 +688,12 @@ const updateComposingCursorPos = () => {
   if (!hiddenInputRef.value || !isComposing.value) {
     return;
   }
-  composingCursorPos.value = hiddenInputRef.value.selectionStart || 0;
+  // 使用 requestAnimationFrame 确保在浏览器更新后获取准确的光标位置
+  requestAnimationFrame(() => {
+    if (hiddenInputRef.value && isComposing.value) {
+      composingCursorPos.value = hiddenInputRef.value.selectionStart || 0;
+    }
+  });
 };
 
 // 处理组合输入更新（中文输入法）- 显示拼音
@@ -685,12 +701,12 @@ const handleCompositionUpdate = (event: CompositionEvent) => {
   if (!isTypingMode.value) return;
 
   const input = event.target as HTMLInputElement;
+  // 先同步获取光标位置（在更新文本之前，避免位置被重置）
+  const currentCursorPos = input.selectionStart ?? input.value.length;
   // 获取拼音内容（可能是input.value或event.data）
   composingText.value = event.data || input.value || "";
-  // 更新光标位置
-  nextTick(() => {
-    updateComposingCursorPos();
-  });
+  // 立即使用保存的光标位置
+  composingCursorPos.value = currentCursorPos;
 };
 
 // 处理组合输入结束（中文输入法）
