@@ -6,6 +6,7 @@
     v-model="showConfigDialog"
     @confirm="handleConfigConfirm"
     @change="handleConfigChange"
+    @pdf-upload="handlePdfUpload"
   />
 
   <div
@@ -151,6 +152,22 @@ const handleConfigConfirm = (config: any) => {
   }
 
   showConfigDialog.value = false;
+};
+
+// 处理PDF上传
+const handlePdfUpload = (pdfText: string) => {
+  if (pdfText) {
+    text.value = pdfText;
+    currentArticleId.value = "uploaded-pdf";
+    readingPosition.value = 0;
+    readingTime.value = 0;
+    highlightIndexes.value = [];
+
+    // 更新拼音映射
+    if (showPinyin.value) {
+      pinyinMap.value = getPinyinMap(text.value);
+    }
+  }
 };
 
 // 加载文言文内容

@@ -96,6 +96,40 @@
                       </div>
                     </el-option>
                   </el-select>
+                  
+                  <!-- PDF上传功能 -->
+                  <div class="pdf-upload-section">
+                    <el-divider>
+                      <span style="color: #909399; font-size: 12px;">或</span>
+                    </el-divider>
+                    <el-upload
+                      ref="uploadRef"
+                      :auto-upload="false"
+                      :on-change="handlePdfChange"
+                      :show-file-list="false"
+                      accept=".pdf"
+                      class="pdf-upload"
+                    >
+                      <template #trigger>
+                        <el-button type="primary" :icon="Upload" :loading="pdfLoading">
+                          {{ pdfLoading ? '正在解析PDF...' : '上传PDF文档' }}
+                        </el-button>
+                      </template>
+                    </el-upload>
+                    <div v-if="uploadedPdfName" class="uploaded-pdf-info">
+                      <el-icon class="pdf-icon"><Document /></el-icon>
+                      <span class="pdf-name">{{ uploadedPdfName }}</span>
+                      <el-button
+                        type="danger"
+                        :icon="Delete"
+                        size="small"
+                        text
+                        @click="clearUploadedPdf"
+                      >
+                        清除
+                      </el-button>
+                    </div>
+                  </div>
                 </div>
 
                 <div class="config-section">
@@ -248,9 +282,15 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from "vue";
-import { RefreshLeft } from "@element-plus/icons-vue";
+import { RefreshLeft, Upload, Document, Delete } from "@element-plus/icons-vue";
 import FontSelector from "./FontSelector.vue";
 import PaperGrid from "./PaperGrid.vue";
+import * as pdfjsLib from "pdfjs-dist";
+
+// 设置PDF.js worker路径 - 使用CDN以确保稳定性
+if (typeof window !== "undefined") {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+}
 
 interface Config {
   readMode: "vertical" | "horizontal";
@@ -271,6 +311,7 @@ const emit = defineEmits<{
   "update:modelValue": [value: boolean];
   confirm: [config: Config];
   change: [config: Config];
+  "pdf-upload": [text: string];
 }>();
 
 const visible = computed({
@@ -279,6 +320,9 @@ const visible = computed({
 });
 
 const classicalTexts = ref<any[]>([]);
+const pdfLoading = ref(false);
+const uploadedPdfName = ref("");
+const uploadRef = ref();
 
 // 默认配置
 const defaultConfig: Config = {
@@ -323,7 +367,79 @@ const handleContentChange = (contentId: string) => {
   if (content) {
     previewText.value = content.text;
   }
+  // 清除上传的PDF
+  if (uploadedPdfName.value) {
+    clearUploadedPdf();
+  }
   updatePreview();
+};
+
+// 处理PDF文件选择
+const handlePdfChange = async (file: any) => {
+  if (!file.raw) return;
+  
+  if (file.raw.type !== "application/pdf") {
+    ElMessage.error("请上传PDF格式的文件");
+    return;
+  }
+
+  pdfLoading.value = true;
+  uploadedPdfName.value = file.name;
+
+  try {
+    const arrayBuffer = await file.raw.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    
+    let fullText = "";
+    const numPages = pdf.numPages;
+
+    // 提取所有页面的文本
+    for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+      const page = await pdf.getPage(pageNum);
+      const textContent = await page.getTextContent();
+      const pageText = textContent.items
+        .map((item: any) => item.str)
+        .join("");
+      fullText += pageText + "\n";
+    }
+
+    // 清理文本：移除多余的空格和换行
+    fullText = fullText
+      .replace(/\s+/g, " ")
+      .replace(/\n\s*\n/g, "\n")
+      .trim();
+
+    if (fullText) {
+      // 清除contentId，因为使用的是上传的PDF
+      config.value.contentId = "";
+      previewText.value = fullText;
+      
+      // 通知父组件更新文本
+      emit("pdf-upload", fullText);
+      updatePreview();
+      
+      ElMessage.success(`PDF解析成功！共 ${numPages} 页`);
+    } else {
+      ElMessage.warning("PDF文件中没有提取到文本内容");
+      clearUploadedPdf();
+    }
+  } catch (error) {
+    console.error("PDF解析失败:", error);
+    ElMessage.error("PDF解析失败，请检查文件格式");
+    clearUploadedPdf();
+  } finally {
+    pdfLoading.value = false;
+  }
+};
+
+// 清除上传的PDF
+const clearUploadedPdf = () => {
+  uploadedPdfName.value = "";
+  if (uploadRef.value) {
+    uploadRef.value.clearFiles();
+  }
+  // 恢复默认内容选择
+  config.value.contentId = "";
 };
 
 const updatePreview = () => {
@@ -821,6 +937,49 @@ onMounted(() => {
       padding: 2px 8px;
       background: rgba(64, 158, 255, 0.1);
       border-radius: 4px;
+    }
+  }
+}
+
+.pdf-upload-section {
+  margin-top: 16px;
+  padding-top: 16px;
+
+  .pdf-upload {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 12px;
+
+    :deep(.el-upload) {
+      width: 100%;
+    }
+
+    :deep(.el-button) {
+      width: 100%;
+    }
+  }
+
+  .uploaded-pdf-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: #f0f2f5;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #606266;
+
+    .pdf-icon {
+      color: #409eff;
+      font-size: 16px;
+    }
+
+    .pdf-name {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
   }
 }
