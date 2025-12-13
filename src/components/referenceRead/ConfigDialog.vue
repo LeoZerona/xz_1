@@ -285,12 +285,43 @@ import { ref, computed, watch, onMounted } from "vue";
 import { RefreshLeft, Upload, Document, Delete } from "@element-plus/icons-vue";
 import FontSelector from "./FontSelector.vue";
 import PaperGrid from "./PaperGrid.vue";
-import * as pdfjsLib from "pdfjs-dist";
+// 动态导入pdfjs-dist以避免SSR问题
+let pdfjsLib: any = null;
 
-// 设置PDF.js worker路径 - 使用CDN以确保稳定性
-if (typeof window !== "undefined") {
-  pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
-}
+// 初始化PDF.js
+const initPdfJs = async () => {
+  if (typeof window === "undefined" || pdfjsLib) return;
+  
+  try {
+    // 动态导入pdfjs-dist
+    const pdfjsModule = await import("pdfjs-dist");
+    
+    // pdfjs-dist 5.x版本的导入方式
+    // 检查是否有default导出，如果没有则使用命名空间导入
+    if (pdfjsModule.default) {
+      pdfjsLib = pdfjsModule.default;
+    } else {
+      // 使用命名空间导入
+      pdfjsLib = pdfjsModule;
+    }
+    
+    // 设置PDF.js worker路径
+    // 使用unpkg CDN，版本号与package.json中的版本对应
+    if (pdfjsLib && pdfjsLib.GlobalWorkerOptions) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@5.4.449/build/pdf.worker.min.js`;
+    } else {
+      console.warn("PDF.js GlobalWorkerOptions未找到，尝试使用默认配置");
+    }
+  } catch (error) {
+    console.error("PDF.js初始化失败:", error);
+    ElMessage.error("PDF解析库加载失败，请刷新页面重试");
+  }
+};
+
+// 在组件挂载时初始化
+onMounted(() => {
+  initPdfJs();
+});
 
 interface Config {
   readMode: "vertical" | "horizontal";
@@ -383,12 +414,32 @@ const handlePdfChange = async (file: any) => {
     return;
   }
 
+  // 确保PDF.js已初始化
+  if (!pdfjsLib) {
+    await initPdfJs();
+  }
+
+  if (!pdfjsLib) {
+    ElMessage.error("PDF解析库加载失败，请刷新页面重试");
+    return;
+  }
+
   pdfLoading.value = true;
   uploadedPdfName.value = file.name;
 
   try {
     const arrayBuffer = await file.raw.arrayBuffer();
-    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    
+    // 使用正确的API调用方式
+    // pdfjs-dist 5.x版本中，getDocument可能是命名导出
+    const getDocument = pdfjsLib.getDocument || (pdfjsLib as any).getDocument;
+    if (!getDocument) {
+      console.error("PDF.js库结构:", pdfjsLib);
+      throw new Error("PDF.js getDocument方法未找到，请检查库是否正确加载");
+    }
+    
+    const loadingTask = getDocument({ data: arrayBuffer });
+    const pdf = await loadingTask.promise;
     
     let fullText = "";
     const numPages = pdf.numPages;
