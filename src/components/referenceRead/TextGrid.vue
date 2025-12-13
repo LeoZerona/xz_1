@@ -237,7 +237,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   text: "",
   cellSize: 69,
-  gap: 10,
+  gap: 11,
   highlightIndexes: () => [],
   layoutMode: "vertical",
   gridType: "tian",

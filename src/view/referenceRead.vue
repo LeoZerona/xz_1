@@ -102,7 +102,7 @@ const currentArticleId = ref("default");
 const text = ref("");
 const loading = ref(false);
 const cellSize = ref(69);
-const gap = ref(10);
+const gap = ref(11);
 const highlightIndexes = ref<number[]>([]);
 const readingPosition = ref(0);
 const readingTime = ref(0);
@@ -438,8 +438,10 @@ watch(
     padding: 0px 5px;
     height: 40px;
     color: #606266;
-    transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1),
-      background-color 0.3s ease, color 0.3s ease;
+    will-change: right;
+    transition: right 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+      background-color 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+      color 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
     &:hover {
       background-color: #f5f7fa;

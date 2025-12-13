@@ -1,6 +1,5 @@
 <template>
   <div
-    v-if="visible"
     class="config-panel-wrapper"
     :class="{ 'panel-visible': visible }"
   >
@@ -407,13 +406,16 @@ onMounted(() => {
   background: linear-gradient(to bottom, #ffffff 0%, #fafbfc 100%);
   box-shadow: -4px 0 20px rgba(0, 0, 0, 0.08), -2px 0 8px rgba(0, 0, 0, 0.04);
   transform: translateX(100%);
-  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   display: flex;
   flex-direction: column;
   border-left: 1px solid rgba(0, 0, 0, 0.06);
+  pointer-events: none; // 隐藏时禁用交互
 
   &.panel-visible {
     transform: translateX(0);
+    pointer-events: auto; // 显示时启用交互
   }
 }
 
